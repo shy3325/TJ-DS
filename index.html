@@ -1,0 +1,1773 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>调教馆</title>
+<!-- disable-default-loading -->
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+  :root {
+    --bg-primary: #1a1018;
+    --bg-secondary: #2a1f28;
+    --bg-tertiary: #3a2838;
+    --accent-red: #c43a5e;
+    --accent-red-dark: #8b1a3a;
+    --accent-gold: #d4a843;
+    --accent-gold-dark: #a07820;
+    --text-primary: #e8d8e0;
+    --text-secondary: #b89aaa;
+    --text-dim: #7a6070;
+    --border-color: #4a3848;
+    --success: #4a9e6a;
+    --danger: #c43a3a;
+    --shadow: rgba(0,0,0,0.5);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height:100vh;
+    overflow-x: hidden;
+    font-size: 14px;
+  }
+
+  .status-bar {
+    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+    border-bottom: 2px solid var(--accent-red-dark);
+    padding: 10px 12px;
+    position: sticky; top:0; z-index:100;
+    box-shadow: 0 4px 12px var(--shadow);
+  }
+  .status-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:4px; }
+  .status-row:last-child { margin-bottom:0; }
+  .status-item { display:flex; align-items:center; gap:4px; font-size:12px; }
+  .status-icon { font-size:14px; }
+  .status-label { color:var(--text-secondary); }
+  .status-value { color:var(--accent-gold); font-weight:700; }
+
+  .exp-bar-container { width:100%; height:14px; background:var(--bg-primary); border-radius:7px; overflow:hidden; position:relative; border:1px solid var(--border-color); }
+  .exp-bar-fill { height:100%; background:linear-gradient(90deg,var(--accent-red-dark),var(--accent-red),var(--accent-gold)); border-radius:7px; transition:width 0.6s ease; position:relative; }
+  .exp-bar-fill::after { content:''; position:absolute; top:0; left:0; right:0; height:50%; background:linear-gradient(to bottom,rgba(255,255,255,0.15),transparent); border-radius:7px 7px 0 0; }
+  .exp-text { position:absolute; width:100%; text-align:center; font-size:9px; line-height:14px; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.8); z-index:1; top:0; }
+
+  .reputation-bar-container { width:100%; height:10px; background:var(--bg-primary); border-radius:5px; overflow:hidden; border:1px solid var(--border-color); margin-top:3px; }
+  .reputation-bar-fill { height:100%; background:linear-gradient(90deg,#5a3a8a,#8a5ac0); border-radius:5px; transition:width 0.6s ease; }
+
+  .skip-btn { padding:2px 8px; font-size:10px; background:var(--bg-tertiary); border:1px solid var(--border-color); color:var(--text-secondary); border-radius:4px; cursor:pointer; font-family:inherit; margin-left:4px; }
+  .skip-btn:active { background:var(--accent-red-dark); color:#fff; }
+
+  .main-content { padding:12px; padding-bottom:80px; min-height:calc(100vh - 160px); }
+  .page { display:none; }
+  .page.active { display:block; animation:fadeSlide 0.3s ease; }
+  @keyframes fadeSlide { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+
+  .bottom-nav { position:fixed; bottom:0; left:0; right:0; background:linear-gradient(to top,var(--bg-secondary),var(--bg-tertiary)); border-top:2px solid var(--accent-red-dark); display:flex; z-index:100; box-shadow:0 -4px 12px var(--shadow); }
+  .nav-btn { flex:1; padding:8px 4px; text-align:center; cursor:pointer; transition:all 0.2s; border:none; background:none; color:var(--text-dim); font-family:inherit; }
+  .nav-btn.active { color:var(--accent-gold); background:rgba(212,168,67,0.08); }
+  .nav-btn:active { transform:scale(0.95); }
+  .nav-icon { font-size:18px; display:block; margin-bottom:2px; }
+  .nav-label { font-size:9px; }
+
+  .card { background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:10px; padding:14px; margin-bottom:12px; box-shadow:0 2px 8px var(--shadow); }
+  .card-title { color:var(--accent-gold); font-size:15px; font-weight:700; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+
+  .btn { padding:10px 18px; border:none; border-radius:8px; cursor:pointer; font-family:inherit; font-size:13px; font-weight:500; transition:all 0.2s; display:inline-flex; align-items:center; gap:6px; }
+  .btn:active { transform:scale(0.96); }
+  .btn-primary { background:linear-gradient(135deg,var(--accent-red),var(--accent-red-dark)); color:#fff; }
+  .btn-gold { background:linear-gradient(135deg,var(--accent-gold),var(--accent-gold-dark)); color:#1a1018; }
+  .btn-secondary { background:var(--bg-tertiary); color:var(--text-secondary); border:1px solid var(--border-color); }
+  .btn-danger { background:linear-gradient(135deg,var(--danger),#8b2020); color:#fff; }
+  .btn-success { background:linear-gradient(135deg,var(--success),#2a6a3a); color:#fff; }
+  .btn-sm { padding:6px 12px; font-size:12px; }
+  .btn-block { width:100%; justify-content:center; }
+  .btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+  .wait-progress { width:100%; height:20px; background:var(--bg-primary); border-radius:10px; overflow:hidden; margin:12px 0; border:1px solid var(--border-color); display:none; }
+  .wait-progress.active { display:block; }
+  .wait-progress-fill { height:100%; background:linear-gradient(90deg,var(--accent-red-dark),var(--accent-red),var(--accent-gold)); border-radius:10px; width:0%; transition:width 3s linear; }
+
+  .guest-card { background:linear-gradient(135deg,#2a1828,#3a2040); border:1px solid #5a3860; border-radius:12px; padding:16px; margin-top:12px; animation:fadeSlide 0.4s ease; }
+  .guest-card h3 { color:var(--accent-gold); margin-bottom:8px; font-size:15px; }
+  .guest-info { color:var(--text-secondary); font-size:13px; line-height:1.8; margin-bottom:12px; }
+  .guest-info span { color:var(--accent-red); font-weight:500; }
+  .requirement-box { background:rgba(196,58,94,0.1); border:1px solid rgba(196,58,94,0.3); border-radius:8px; padding:10px; margin:10px 0; }
+  .requirement-title { color:var(--accent-red); font-size:13px; font-weight:700; margin-bottom:6px; }
+  .guest-actions { display:flex; gap:10px; margin-top:12px; }
+  .guest-actions .btn { flex:1; }
+  .reward-preview { background:rgba(212,168,67,0.08); border:1px solid rgba(212,168,67,0.25); border-radius:8px; padding:10px; margin:10px 0; font-size:12px; color:var(--accent-gold); }
+
+  .room-grid { display:grid; gap:12px; }
+  .room-card { background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:10px; padding:14px; position:relative; overflow:hidden; }
+  .room-card.occupied { border-color:var(--accent-red-dark); }
+  .room-card.empty { border-style:dashed; opacity:0.7; }
+  .room-status { position:absolute; top:8px; right:8px; font-size:10px; padding:2px 8px; border-radius:10px; font-weight:700; }
+  .room-status.occupied { background:rgba(196,58,94,0.2); color:var(--accent-red); }
+  .room-status.free { background:rgba(74,158,106,0.2); color:var(--success); }
+  .dog-name { font-size:15px; font-weight:700; color:var(--accent-gold); margin-bottom:6px; }
+
+  .stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:10px 0; }
+  .stat-item { font-size:11px; }
+  .stat-item .label { color:var(--text-dim); }
+  .stat-item .value { color:var(--text-secondary); }
+  .sensitivity-bar { height:6px; background:var(--bg-primary); border-radius:3px; overflow:hidden; margin-top:2px; }
+  .sensitivity-fill { height:100%; border-radius:3px; transition:width 0.4s ease; }
+  .sensitivity-fill.low { background:#4a9e6a; }
+  .sensitivity-fill.mid { background:var(--accent-gold); }
+  .sensitivity-fill.high { background:var(--accent-red); }
+
+  .needs-bar-container { margin:6px 0; }
+  .needs-row { display:flex; align-items:center; gap:6px; margin-bottom:4px; font-size:11px; }
+  .needs-bar { flex:1; height:6px; background:var(--bg-primary); border-radius:3px; overflow:hidden; }
+  .needs-fill-hunger { height:100%; background:linear-gradient(90deg,#c44,#e88); border-radius:3px; transition:width 0.4s; }
+  .needs-fill-thirst { height:100%; background:linear-gradient(90deg,#38a,#6cf); border-radius:3px; transition:width 0.4s; }
+
+  .training-panel { display:none; animation:fadeSlide 0.3s ease; }
+  .training-panel.active { display:block; }
+  .tool-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:10px 0; }
+  .tool-btn { padding:10px 6px; background:var(--bg-tertiary); border:1px solid var(--border-color); border-radius:8px; color:var(--text-secondary); font-size:11px; text-align:center; cursor:pointer; transition:all 0.2s; font-family:inherit; }
+  .tool-btn:active { background:var(--accent-red-dark); color:#fff; }
+  .tool-btn .tool-icon { font-size:20px; display:block; margin-bottom:4px; }
+  .tool-btn:disabled { opacity:0.3; cursor:not-allowed; }
+
+  .training-log { background:var(--bg-primary); border:1px solid var(--border-color); border-radius:8px; padding:10px; max-height:280px; overflow-y:auto; font-size:12px; line-height:1.8; color:var(--text-secondary); margin:10px 0; }
+  .training-log p { margin-bottom:4px; padding-left:8px; border-left:2px solid var(--accent-red-dark); }
+  .training-log p:last-child { border-left-color:var(--accent-red); color:var(--text-primary); }
+  .training-log .dialogue { color:var(--accent-gold); font-style:italic; }
+
+  .target-section { background:rgba(212,168,67,0.05); border:1px solid rgba(212,168,67,0.2); border-radius:8px; padding:10px; margin:10px 0; }
+  .target-row { display:flex; justify-content:space-between; align-items:center; font-size:12px; margin-bottom:4px; }
+  .target-row .current { color:var(--text-secondary); }
+  .target-row .goal { color:var(--accent-gold); font-weight:700; }
+  .target-row .achieved { color:var(--success); }
+
+  .shop-tabs { display:flex; gap:6px; margin-bottom:12px; overflow-x:auto; padding-bottom:4px; }
+  .shop-tab { padding:6px 14px; background:var(--bg-tertiary); border:1px solid var(--border-color); border-radius:20px; color:var(--text-dim); font-size:12px; cursor:pointer; white-space:nowrap; font-family:inherit; transition:all 0.2s; }
+  .shop-tab.active { background:var(--accent-red-dark); color:#fff; border-color:var(--accent-red); }
+
+  .shop-item { display:flex; align-items:center; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:10px; padding:12px; margin-bottom:8px; gap:12px; }
+  .shop-item-icon { font-size:28px; width:44px; height:44px; display:flex; align-items:center; justify-content:center; background:var(--bg-primary); border-radius:8px; flex-shrink:0; }
+  .shop-item-info { flex:1; min-width:0; }
+  .shop-item-name { font-size:13px; font-weight:700; color:var(--text-primary); margin-bottom:2px; }
+  .shop-item-desc { font-size:11px; color:var(--text-dim); line-height:1.4; }
+  .shop-item-price { color:var(--accent-gold); font-weight:700; font-size:13px; white-space:nowrap; }
+
+  .inventory-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  .inv-slot { aspect-ratio:1; background:var(--bg-tertiary); border:1px solid var(--border-color); border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:24px; cursor:pointer; transition:all 0.2s; position:relative; }
+  .inv-slot:active { border-color:var(--accent-gold); }
+  .inv-slot .inv-name { font-size:9px; color:var(--text-dim); margin-top:4px; text-align:center; line-height:1.2; }
+  .inv-slot .inv-count { position:absolute; top:4px; right:4px; font-size:10px; background:var(--accent-red-dark); color:#fff; border-radius:8px; padding:0 5px; min-width:16px; text-align:center; }
+
+  .modal-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); z-index:200; align-items:center; justify-content:center; padding:20px; }
+  .modal-overlay.active { display:flex; }
+  .modal { background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:14px; padding:20px; width:100%; max-width:400px; animation:fadeSlide 0.3s ease; max-height:85vh; overflow-y:auto; }
+  .modal-title { font-size:16px; font-weight:700; color:var(--accent-gold); margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+  .modal-desc { font-size:13px; color:var(--text-secondary); line-height:1.6; margin-bottom:14px; }
+  .modal-actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .modal-actions .btn { flex:1; min-width:60px; }
+
+  .setting-row { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border-color); }
+  .setting-label { font-size:13px; color:var(--text-secondary); }
+  .font-size-ctrl { display:flex; align-items:center; gap:10px; }
+  .font-size-ctrl button { width:30px; height:30px; border-radius:50%; border:1px solid var(--border-color); background:var(--bg-tertiary); color:var(--text-primary); font-size:16px; cursor:pointer; font-family:inherit; }
+
+  .save-slot { background:var(--bg-tertiary); border:1px solid var(--border-color); border-radius:10px; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }
+  .save-slot-info { font-size:12px; }
+  .save-slot-info .slot-name { color:var(--text-primary); font-weight:500; margin-bottom:2px; }
+  .save-slot-info .slot-time { color:var(--text-dim); font-size:11px; }
+  .save-actions { display:flex; gap:6px; }
+
+  .intro-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(10,5,10,0.95); z-index:300; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .intro-overlay.hidden { display:none; }
+  .intro-box { max-width:400px; width:100%; text-align:center; }
+  .intro-title { font-size:24px; font-weight:700; color:var(--accent-gold); margin-bottom:20px; text-shadow:0 0 20px rgba(212,168,67,0.3); }
+  .intro-text { font-size:14px; color:var(--text-secondary); line-height:2; margin-bottom:16px; text-align:left; }
+  .intro-text em { color:var(--accent-red); font-style:normal; font-weight:500; }
+  .intro-credit { font-size:11px; color:var(--text-dim); margin-bottom:16px; line-height:1.6; }
+
+  .toast { position:fixed; top:20px; left:50%; transform:translateX(-50%) translateY(-100px); background:var(--bg-secondary); border:1px solid var(--accent-gold); color:var(--text-primary); padding:10px 20px; border-radius:10px; font-size:13px; z-index:400; transition:transform 0.3s ease; text-align:center; max-width:80%; }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+
+  .complete-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(10,5,10,0.9); z-index:250; align-items:center; justify-content:center; padding:20px; }
+  .complete-overlay.active { display:flex; }
+  .complete-box { background:linear-gradient(135deg,#2a1828,#3a2040); border:2px solid var(--accent-gold); border-radius:16px; padding:24px; text-align:center; max-width:340px; width:100%; }
+  .complete-title { font-size:20px; color:var(--accent-gold); font-weight:700; margin-bottom:12px; }
+  .complete-rewards { font-size:14px; color:var(--text-secondary); line-height:2; margin-bottom:16px; }
+  .complete-rewards span { color:var(--accent-gold); font-weight:700; }
+
+  .gameover-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:500; align-items:center; justify-content:center; padding:20px; }
+  .gameover-overlay.active { display:flex; }
+  .gameover-box { max-width:380px; width:100%; text-align:center; padding:30px; background:linear-gradient(135deg,#1a0a0a,#2a1010); border:2px solid var(--danger); border-radius:16px; max-height:80vh; overflow-y:auto; }
+  .gameover-box.true-end { border-color:var(--accent-gold); background:linear-gradient(135deg,#1a1528,#2a2040); }
+  .gameover-title { font-size:22px; font-weight:700; margin-bottom:16px; }
+  .gameover-text { font-size:14px; color:var(--text-secondary); line-height:2; margin-bottom:20px; }
+
+  .star-display { color:var(--accent-gold); font-size:14px; letter-spacing:2px; }
+  .equipped-items { font-size:11px; color:var(--text-dim); margin:4px 0; }
+  .equipped-items span { color:var(--accent-red); }
+
+  .history-entry { background:var(--bg-tertiary); border:1px solid var(--border-color); border-radius:8px; padding:10px; margin-bottom:8px; cursor:pointer; }
+  .history-entry:active { border-color:var(--accent-gold); }
+  .history-entry .he-name { color:var(--accent-gold); font-weight:700; font-size:13px; }
+  .history-entry .he-info { color:var(--text-dim); font-size:11px; margin-top:4px; }
+  .history-entry .he-status { font-size:11px; font-weight:700; }
+  .he-success { color:var(--success); }
+  .he-fail { color:var(--danger); }
+
+  .api-input { width:100%; padding:8px; background:var(--bg-primary); border:1px solid var(--border-color); border-radius:6px; color:var(--text-primary); font-family:inherit; font-size:12px; margin:4px 0; }
+  .api-input::placeholder { color:var(--text-dim); }
+  .api-select { width:100%; padding:8px; background:var(--bg-primary); border:1px solid var(--border-color); border-radius:6px; color:var(--text-primary); font-family:inherit; font-size:12px; margin:4px 0; }
+
+  .buy-hint { font-size:10px; color:var(--text-dim); cursor:pointer; text-decoration:underline; margin-left:4px; }
+  .generated-story { background:var(--bg-primary); border:1px solid var(--border-color); border-radius:8px; padding:12px; font-size:13px; line-height:1.8; color:var(--text-secondary); max-height:400px; overflow-y:auto; margin:10px 0; white-space:pre-wrap; }
+
+  .mind-text { font-size:11px; color:#e8a; font-style:italic; margin-top:4px; padding:6px 8px; background:rgba(232,170,200,0.06); border-radius:6px; border-left:2px solid #e8a; }
+
+  ::-webkit-scrollbar { width:4px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--border-color); border-radius:2px; }
+</style>
+</head>
+<body>
+
+<div class="intro-overlay" id="introOverlay">
+  <div class="intro-box">
+    <div class="intro-title">🔗 调教馆</div>
+    <div class="intro-text" id="introText"></div>
+    <div class="intro-credit" id="introCredit" style="display:none;">作者：萨拉<br>请勿二传</div>
+    <button class="btn btn-gold btn-block" id="introBtn" style="display:none;" onclick="startGame()">踏入这扇门</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="modal-overlay" id="itemModal"><div class="modal"><div class="modal-title" id="modalTitle"></div><div class="modal-desc" id="modalDesc"></div><div class="modal-actions" id="modalActions"></div></div></div>
+<div class="modal-overlay" id="eagleModal"><div class="modal"><div class="modal-title">🦅 熬鹰</div><div id="eagleContent"></div><div class="modal-actions" id="eagleActions"></div></div></div>
+<div class="modal-overlay" id="sexModal"><div class="modal"><div class="modal-title">🔞 选择插入部位</div><div class="modal-desc" id="sexModalDesc"></div><div class="modal-actions" id="sexModalActions"></div></div></div>
+<div class="modal-overlay" id="handModal"><div class="modal"><div class="modal-title">🤚 徒手操作</div><div class="modal-desc">选择要把玩的部位：</div><div class="modal-actions" id="handModalActions"></div></div></div>
+<div class="modal-overlay" id="insertModal"><div class="modal"><div class="modal-title">📌 选择插入部位</div><div class="modal-desc" id="insertModalDesc"></div><div class="modal-actions" id="insertModalActions"></div></div></div>
+<div class="modal-overlay" id="historyDetailModal"><div class="modal" id="historyDetailContent"></div></div>
+<div class="modal-overlay" id="buyModal"><div class="modal"><div class="modal-title">💖 买下这条狗</div><div class="modal-desc" id="buyModalDesc"></div><div class="modal-actions" id="buyModalActions"></div></div></div>
+<div class="modal-overlay" id="facilityInstallModal"><div class="modal"><div class="modal-title">🏗️ 选择安装调教室</div><div class="modal-desc" id="facilityInstallDesc"></div><div class="modal-actions" id="facilityInstallActions"></div></div></div>
+<div class="modal-overlay" id="oralModal"><div class="modal"><div class="modal-title">👄 口交</div><div class="modal-desc" id="oralModalDesc"></div><div class="modal-actions" id="oralModalActions"></div></div></div>
+
+<div class="complete-overlay" id="completeOverlay"><div class="complete-box"><div class="complete-title" id="completeTitle">✨ 调教完成</div><div class="complete-rewards" id="completeRewards"></div><button class="btn btn-gold btn-block" onclick="closeComplete()">确认</button></div></div>
+
+<div class="gameover-overlay" id="gameoverOverlay"><div class="gameover-box" id="gameoverBox"><div class="gameover-title" id="gameoverTitle">💀 GAME OVER</div><div class="gameover-text" id="gameoverText"></div><div id="gameoverActions"><button class="btn btn-danger btn-block" onclick="restartGame()">重新开始</button></div></div></div>
+
+<div class="status-bar" id="statusBar">
+  <div class="status-row">
+    <div class="status-item">
+      <span class="status-icon">📅</span><span class="status-label">第</span><span class="status-value" id="dayCount">1</span><span class="status-label">天</span>
+      <span class="status-value" style="margin-left:4px;font-size:11px;" id="timeDisplay">08:00</span>
+      <button class="skip-btn" onclick="skipOneHour()">+1h</button>
+    </div>
+    <div class="status-item"><span class="status-icon">💰</span><span class="status-value" id="goldCount">500</span></div>
+    <div class="status-item"><span class="status-icon">🏅</span><span class="status-value" id="rankTitle">初级调教师</span></div>
+  </div>
+  <div class="status-row">
+    <div class="status-item" style="flex:1;margin-right:8px;">
+      <span class="status-icon">⚡</span><span class="status-label" style="margin-right:4px;">EXP</span>
+      <div class="exp-bar-container" style="flex:1;"><div class="exp-text" id="expText">0 / 100</div><div class="exp-bar-fill" id="expBar" style="width:0%"></div></div>
+    </div>
+  </div>
+  <div class="status-row">
+    <div class="status-item" style="flex:1;">
+      <span class="status-icon">⭐</span><span class="status-label" style="margin-right:4px;">声望</span>
+      <div class="reputation-bar-container" style="flex:1;"><div class="reputation-bar-fill" id="repBar" style="width:5%"></div></div>
+      <span class="status-value" style="margin-left:6px;font-size:11px;" id="repValue">5</span>
+    </div>
+  </div>
+</div>
+
+<div class="main-content">
+  <div class="page active" id="pageLobby"><div class="card"><div class="card-title">🚪 待客厅</div><p style="font-size:12px;color:var(--text-dim);margin-bottom:12px;" id="lobbyHint"></p><button class="btn btn-primary btn-block" id="waitBtn" onclick="startWaiting()">⏳ 等待客人</button><div class="wait-progress" id="waitProgress"><div class="wait-progress-fill" id="waitProgressFill"></div></div><div id="guestArea"></div></div></div>
+
+  <div class="page" id="pageTraining"><div class="card"><div class="card-title">🔒 调教室</div><div class="room-grid" id="roomGrid"></div><button class="btn btn-gold btn-block" style="margin-top:12px;" onclick="buildRoom()">🔨 新建调教室</button><p style="font-size:11px;color:var(--text-dim);margin-top:6px;text-align:center;" id="buildCostHint"></p></div>
+    <div class="training-panel" id="trainingPanel"><div class="card"><div class="card-title" id="tpTitle"></div><div id="tpNeeds"></div><div class="target-section" id="tpTargets"></div><div id="tpEquipped"></div><div id="tpFacilities"></div><div class="tool-grid" id="tpTools"></div><div class="training-log" id="tpLog"><p style="color:var(--text-dim);">尚无操作记录...</p></div>
+      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
+        <button class="btn btn-secondary btn-sm" onclick="closeTrainingPanel()">返回</button>
+        <button class="btn btn-gold btn-sm" onclick="feedDog('food')">🍖投喂</button>
+        <button class="btn btn-gold btn-sm" onclick="feedDog('water')">💧喂水</button>
+        <button class="btn btn-primary btn-sm" onclick="openSexChoice()">🔞性交</button>
+        <button class="btn btn-primary btn-sm" onclick="openOralChoice()">👄口交</button>
+        <button class="btn btn-secondary btn-sm" onclick="startEagle()">🦅熬鹰</button>
+        <button class="btn btn-success btn-sm" onclick="tryCompleteTraining()">完成调教</button>
+      </div>
+      <div style="margin-top:6px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+        <button class="btn btn-sm" style="background:#5a2a6a;color:#e8d8e0;font-size:11px;" onclick="openBuyModal()">💖买下</button>
+        <span class="buy-hint" onclick="showToast('太喜欢这条狗了？花钱买下来吧，从此归你所有。费用为任务报酬的十倍。')">?</span>
+        <button class="btn btn-sm btn-secondary" id="drinkMilkBtn" style="display:none;" onclick="drinkMilk()">🥛吸奶</button>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="page" id="pageInventory"><div class="card"><div class="card-title">📦 仓库</div><div class="inventory-grid" id="inventoryGrid"></div><p style="font-size:11px;color:var(--text-dim);margin-top:8px;text-align:center;" id="invEmpty">仓库空空如也...</p></div></div>
+
+  <div class="page" id="pageShop"><div class="card"><div class="card-title">🏪 商店</div><div class="shop-tabs" id="shopTabs"></div><div id="shopList"></div></div></div>
+
+  <div class="page" id="pageHistory"><div class="card"><div class="card-title">📜 历史战绩</div><div id="historyList"><p style="color:var(--text-dim);font-size:12px;">尚无历史记录。</p></div></div></div>
+
+  <div class="page" id="pageSettings"><div class="card"><div class="card-title">⚙️ 设置</div><div class="setting-row"><span class="setting-label">文字大小</span><div class="font-size-ctrl"><button onclick="changeFontSize(-1)">-</button><span id="fontSizeDisplay">14</span><button onclick="changeFontSize(1)">+</button></div></div></div>
+    <div class="card"><div class="card-title">💾 存档管理</div><div id="saveSlots"></div></div>
+    <div class="card"><div class="card-title">🔌 API 连接</div>
+      <div style="font-size:12px;color:var(--text-dim);margin-bottom:8px;">连接外部大语言模型API，用于在历史战绩中生成调教剧情。</div>
+      <input class="api-input" id="apiUrl" placeholder="API URL (如 https://api.openai.com/v1)">
+      <input class="api-input" id="apiKey" placeholder="API Key / 密钥" type="password">
+      <button class="btn btn-gold btn-sm btn-block" style="margin:6px 0;" onclick="saveApiConfig()">保存配置</button>
+      <button class="btn btn-primary btn-sm btn-block" onclick="connectApi()">连接并获取模型</button>
+      <select class="api-select" id="apiModelSelect"><option value="">请先连接API</option></select>
+      <button class="btn btn-secondary btn-sm btn-block" style="margin-top:4px;" onclick="saveSelectedModel()">确认选择模型</button>
+      <p style="font-size:11px;color:var(--text-dim);margin-top:4px;" id="apiStatus">未连接</p>
+    </div>
+    <div class="card"><div class="card-title">🔄 重新开始</div><p style="font-size:12px;color:var(--text-dim);margin-bottom:10px;">清除当前进度从头开始。手动存档不受影响。</p><button class="btn btn-danger btn-block" onclick="confirmRestart()">⚠️ 重新开始</button></div>
+  </div>
+</div>
+
+<div class="bottom-nav">
+  <button class="nav-btn active" onclick="switchPage('pageLobby',this)"><span class="nav-icon">🚪</span><span class="nav-label">待客厅</span></button>
+  <button class="nav-btn" onclick="switchPage('pageTraining',this)"><span class="nav-icon">🔒</span><span class="nav-label">调教室</span></button>
+  <button class="nav-btn" onclick="switchPage('pageInventory',this)"><span class="nav-icon">📦</span><span class="nav-label">仓库</span></button>
+  <button class="nav-btn" onclick="switchPage('pageShop',this)"><span class="nav-icon">🏪</span><span class="nav-label">商店</span></button>
+  <button class="nav-btn" onclick="switchPage('pageHistory',this)"><span class="nav-icon">📜</span><span class="nav-label">战绩</span></button>
+  <button class="nav-btn" onclick="switchPage('pageSettings',this)"><span class="nav-icon">⚙️</span><span class="nav-label">设置</span></button>
+</div>
+
+<script>
+const RANK_TABLE=[{name:'初级调教师',expReq:0,maxStar:1},{name:'中级调教师',expReq:100,maxStar:2},{name:'高级调教师',expReq:350,maxStar:3},{name:'资深调教师',expReq:800,maxStar:4},{name:'顶级调教师',expReq:1500,maxStar:5},{name:'传奇调教师',expReq:3000,maxStar:5}];
+const STAR_EXP_RANGE={1:[3,9],2:[8,18],3:[15,28],4:[22,40],5:[30,50]};
+const STAR_GOLD_RANGE={1:[50,120],2:[100,220],3:[180,350],4:[280,500],5:[400,700]};
+
+const SURNAMES=['赵','钱','孙','李','周','吴','郑','王','冯','陈','褚','卫','蒋','沈','韩','杨','朱','秦','尤','许','何','吕','施','张','孔','曹','严','华','金','魏','陶','姜','戚','谢','邹','喻','柏','章','云','苏','潘','葛','范','彭','鲁','韦','马','苗','方','俞','任','袁','柳','鲍','史','唐','薛','雷','贺','倪','汤','殷','罗','毕','郝','安','常','乐','于','傅','齐','康','伍','余','元','顾','孟','黄','萧','尹','姚','邵','汪','毛','狄','米','明','计','成','戴','宋','庞','熊','纪','舒','屈','项','祝','董','梁','杜','蓝','席','季','强','贾','路','江','童','颜','郭','梅','盛','林','钟','徐','邱','骆','高','夏','蔡','田','胡','凌','霍','万','管','卢','莫','房','干','解','应','宗','丁','宣','邓','单','洪','包','左','崔','吉','龚','程','邢','裴','陆','翁','荀','羊','甄','曲','封','储','靳','段','富','焦','巴','牧','山','车','侯','全','班','秋','仲','宫','宁','仇','栾','甘','武','符','刘','景','詹','龙','叶','司','黎','蒲','从','索','赖','卓','屠','蒙','池','乔','胥','苍','双','闻','党','翟','谭','贡','姬','申','扶','冉','雍','桑','桂','牛','寿','边','燕','冀','尚','温','庄','晏','柴','瞿','阎','连','习','容','向','古','易','廖','居','步','都','耿','满','匡','文','寇','广','阙','东','欧','越','师','巩','聂','勾','敖','融','冷','辛','阚','简','饶','空','曾','沙','养','须','丰','巢','关','查','游','竺','权','盖','桓','公'];
+const GIVEN_CHARS=['轩','宇','泽','瑞','恒','彦','霖','煜','铭','逸','晨','辰','奕','曜','珩','璟','翊','尧','谦','澈','屹','渊','骁','峻','麟','昊','琛','淳','墨','衍','笙','砚','棠','钰','韫','珏','琮','珂','玮','瑜','瑾','景','行','之','予','然','也','亦','若','安','允','嘉','熙','禹','舜','卿','临','归','念','思','怀','知','信','端','清','明','昭','朗','旭','耀','灿','焕','烁','烨','曦','暖','霁','雪','霜','凌','寒','风','岚','溪','澜','涵','泓','源','淮','汐','沐','浔','澄','鸿','鹤','鹏','翼','飞','羽','翔','凤','鸣','弦','音','律','韵','和','颂','赋','章','典','纶','维','道','善','义','仁','礼','智','忠','勇','毅','坚','刚','威','武','虎','龙','骏','骐','驰','驹','瑰','萱','蕙','兰','菊','荷','莲','梅','桃','柳','桐','柏','松','楠','枫','桦','檀','竹','萧','芷','薇','茵','蕊','馨','芬','芳','菲','莺','燕','蝶','绮','锦','绛','绯','丹','彤','碧','青','翠','苍','素','银','锋','锐','鑫','淼','森','磊','晶'];
+
+function generateName(){const s=pick(SURNAMES);const n=Math.random()<0.5?1:2;let g='';for(let i=0;i<n;i++)g+=pick(GIVEN_CHARS);return s+g;}
+
+const HEIGHT_POOL=['158cm，纤瘦身量如同风中柳条','162cm，四肢匀亭比例恰到好处','170cm，脊背挺直肩线利落','175cm，长腿劲瘦行走间带着微风','168cm，腰窄胯正像雕刻出来的线条','155cm，矮小精巧骨架纤薄如纸','180cm，高挑修长脖颈优美','165cm，不高不矮手脚灵巧','172cm，骨架舒展肌理分明','160cm，灵动紧凑抬头才到你锁骨','178cm，宽肩窄腰倒三角身形极具压迫感','183cm，骨架开阔手臂线条硬朗','176cm，腿长腰紧站姿笔挺如标枪','169cm，匀称偏壮手腕粗实','182cm，肩膀撑得很开胸膛宽厚'];
+const BUILD_POOL=['纤瘦苍白，肋骨微微可见','匀称紧致，线条柔和','丰腴饱满，肉感十足','精干结实，腰身紧窄','柔软白嫩，未见过日光','微胖可爱，浑身软绵','干瘦修长，锁骨深刻','肩膀宽阔，力量型身材','娇小圆润，骨架极细','青涩未褪的少年身型','胸肌隆起腹肌分明，健身房练出来的躯体','背阔肌发达从后面看虎背熊腰','手臂粗壮青筋浮现握力惊人','腰腹有薄薄一层脂肪覆盖着结实的核心','全身肌肉匀称紧致像长期运动的运动员体型'];
+const SKIN_POOL=['瓷白透出青色血管','蜜色绸缎般光滑','雪白微粉如蜜桃','小麦色健康的质感','苍白得近乎病态','奶白色吹弹可破','浅褐蜜色散发暖意','象牙白细腻无瑕','微红通透像染了薄粉','冷白偏灰带着疏离','古铜色紧致泛着油光','蜜褐色像烘烤过的面包','浅棕匀净带着野性气息'];
+const NIPPLE_POOL=['粉嫩小巧几乎没被碰过','淡褐色微微凸起','深粉红稍有敏感痕迹','樱色挺立碰就缩起来','浅棕微肿似乎被玩弄过','嫩红如樱桃尖未经开发','暗粉色乳晕偏大','浅粉幼嫩极易充血','红褐色微微下垂','桃粉饱满轻捏便硬','颜色极深乳晕宽大像被长期揉搓过','乳头偏大凸起明显颜色偏深褐','胸肌上的两点颜色浅淡在发达的胸肌上显得格外小巧'];
+const COCK_POOL=['中等尺寸安静垂着','偏短粗壮龟头圆钝','修长形白皙得与肤色融为一体','稍大青筋不明显','小巧粉嫩没怎么被使用','偏粗壮颜色深沉','纤细秀气像是装饰品','尺寸可观本人似乎并不自知','略微弯曲前端泛红','短小敏感轻触即颤','粗壮沉甸甸的挂着龟头颜色偏深','长度惊人软着都垂到大腿中段','柱体布满青筋囊袋饱满沉重'];
+const HOLE_POOL=['紧闭粉嫩几乎从未被使用','浅粉色微微收缩稍有弹性','淡褐色入口紧致','粉红娇嫩肉壁极薄','颜色极浅看不出褶皱','淡紫泛红微微翕动','浅棕色稍经开拓仍紧致','雪白围绕粉色穴口','微微外翻的嫩肉极为敏感','紧窄深色需要长时间开发'];
+const PUSSY_POOL=['粉嫩紧致花瓣微微闭合','浅粉色微微湿润从未被使用','花唇饱满颜色浅淡如桃花','暗粉色肉缝紧密小唇外翻','嫩红柔软阴蒂小巧','淡褐色内壁收缩力极强','水润粉白拨开便见浅色内壁','花穴紧窄入口泛着薄薄水光','瓣肉丰厚从浅粉渐变到深红','处子般的紧致触碰便本能夹紧'];
+
+const NIP_APP=['粉嫩未经开发','微微充血泛红','红肿挺立敏感','深红饱胀欲滴','紫红糜烂轻触便颤'];
+const COCK_APP=['自然垂落色泽正常','微微抬头前端泛红','半勃敏感颜色加深','充血胀硬青筋浮现','深红欲裂稍有刺激便失禁'];
+const HOLE_APP=['紧闭如初','微微松弛边缘泛红','明显扩张穴口充血','大开松软内壁外翻','彻底开发合不拢'];
+const PUSSY_APP=['花瓣紧闭如初','微微张开泛起水光','花唇充血肿胀蜜液连绵','大开湿透内壁清晰可见','彻底绽放合拢不住'];
+const ADDICT_APP=['毫无渴望','偶尔走神','频繁分心呼吸变重','坐立不安主动磨蹭','失去理智般地渴求被填满'];
+const M_APP=['毫无受虐倾向','偶尔在疼痛中感到异样快感','开始享受鞭打带来的刺痛','被打时主动迎合渴望更重的惩罚','彻底沉沦于疼痛与快感的交织中'];
+const ORAL_APP=['完全抗拒咬牙不张','勉强张嘴舌头僵硬','开始用舌头配合吞吐','主动吸吮喉咙放松','熟练地深喉吞吐舌技精湛'];
+
+const OWNER_M_SFX=['先生','老爷','公子','少爷','老板'];
+const OWNER_F_SFX=['太太','小姐','女士','夫人','姐姐'];
+
+const REQ_POOL={
+  obedience:['把它调教到彻底服从，见到主人要自觉跪下','这家伙嘴硬得很，把它的傲气全部磨掉','我需要一条绝对听话的狗','这畜生上次咬了管家一口，给我把它的野性彻底阉掉','听说你们馆子调教出的狗个个服服帖帖，我倒要看看能把这贱种驯到什么程度'],
+  nipple:['我要它的乳头变得超级敏感光是吹口气就受不了','把那两颗东西调教到随时挺立碰就浑身发软','乳头必须达到极致敏感穿衣服摩擦都能让它呻吟','我喜欢看它乳头被玩到红肿的样子，给我调教到碰都碰不得','让那两粒变成它全身最骚的开关，拧一下就瘫软'],
+  cock:['它的那根东西太迟钝了给我调教到碰都碰不得','让那玩意儿变得又敏感又听话','我要它的鸡巴成为最脆弱的弱点','把那根没用的肉棒训练到随时都硬着，碰一下就射','我要它的鸡巴敏感到自己走路都能蹭硬了'],
+  hole:['后穴完全打开能轻松容纳大号道具','下面那个洞太紧了帮我好好松松顺带让它学会夹','我要这个洞训练到极致','它的屁眼紧得跟没开过一样，你懂我意思吧，给我撑到合不上','把它的后穴调教成随时待命的母狗穴'],
+  pussy:['那条缝太紧了给我好好开发让它流水不止','把小穴调教到敏感透顶手指进去就高潮','逼要变得又湿又松塞什么都能吃下','让它的骚穴学会自己流水，看到主人就湿透','把那个逼训练到筷子都夹得住'],
+  addiction:['我要它离不开被插的感觉一天不被操就浑身难受','给它养出性瘾来让它跪着求人操它','把它调教到没有东西塞着就哭闹的程度','让这贱货变成离了鸡巴就活不了的骚狗','培养到它自己往道具上坐的程度'],
+  masochism:['让它爱上被打的感觉越打越兴奋','把它调教成天生的M每次被鞭打都会高潮','我要它成为一个合格的受虐犬','给我把这条狗打到求着你继续打的地步','训练到它挨鞭子比挨操还舒服'],
+  oral:['训练它的嘴让它学会含着东西伺候主人','我要一条会用嘴伺候的狗舌头要灵活','把它的嘴巴训练成最好用的肉套','让这张嘴变成专业的口交工具吞到根都不会呕']
+};
+
+const VIRGIN_OPTS=[{text:'第一次留给我你只能用道具别碰它的处',keep:true},{text:'无所谓你想怎么操就怎么操反正送来就是给玩的',keep:false},{text:'第一次必须留着这是老子花了大价钱买的货',keep:true},{text:'随便你怎么处置操烂了也无所谓只要调教好',keep:false},{text:'绝对不能碰它下面那个洞其他随意',keep:true},{text:'你就当这是块肉怎么用都行把它训好了就成',keep:false}];
+
+const ENTER_LOW=['"滚开！别碰我！你算什么东西！"','"放我走……我不属于这里……"','"你敢碰我试试！"','"呸！你们这群变态！"','"我不会屈服的……"','"把这鬼东西解开！"'];
+const ENTER_MID=['"……又要开始了吗。"','"我、我知道了……你做吧……"','"别太过分就好……"','"……嗯，我会配合。"','"今天也是……这种事吗……"','"你想要我怎么做……"'];
+const ENTER_HIGH=['"主人……我准备好了，请使用我。"','"嗯……身体已经开始期待了呢……"','"请吩咐吧，什么都会做到。"','"主人来了……好开心……♡"','"我会乖乖听话的……"','"呜……光是看到主人走进来身体就……"'];
+const ENTER_OWNED=['"主人回来了……♡ 今天也请好好疼爱我吧。"','"嗯……主人的气息……好想被抱紧……"','"主人♡ 我一直在等你……身体已经准备好了。"','"欢迎回来主人……今天想怎样使用我呢？"','"主人……我好想你……♡"','"主人来了呢……尾巴都要摇起来了♡"'];
+
+const ADDICT_BEG=['"求……求你了……给我……塞点什么进来……受不了了……"','"主人……里面好痒……好空……求你操我……"','"不行了……想要……想要被填满……呜呜呜……"','"插进来吧……什么都行……求求你了……♡"','"身体……好热……那里……一直在流水……"','"呜……空虚得要发疯了……给我……"'];
+
+const REACT_LOW=['"住手！你在干什么……唔！"','"不要……别碰那里……滚！"','"松开我！混蛋！"','"啊……痛……你个……"'];
+const REACT_MID=['"唔……又来了……不要太用力……"','"嗯啊……那里……别这样……"','"可以……轻点吗……"','"呜……好奇怪……身体好热……"'];
+const REACT_HIGH=['"啊♡……好舒服……再多给我些……"','"主人……那里……还要……♡"','"嗯嗯……要坏掉了……好棒♡……"','"呜呜……全身都在发抖……不要停……"'];
+
+const MASOCHISM_LOW=['"痛！你个变态……呜！"','"住手……不要再打了……求你……"'];
+const MASOCHISM_MID=['"啊……好痛……可是……为什么……身体在发热……"','"不要……唔……再来……不……我在说什么……"'];
+const MASOCHISM_HIGH=['"啊♡……再打……再用力些……♡"','"主人……鞭子……好舒服……♡ 求你打得更狠……"','"呜啊♡……每一鞭都让身体在叫……不要停♡……"'];
+
+const EAGLE_BEG=['"求……求你了……放我出去……我什么都听你的……"','"不要了……我错了……真的错了……开门……"','"我服了……彻底服了……主人……放过我吧……"','"这里好暗……好冷……我害怕……求求你……"','"我再也不反抗了……保证……让我出去……"','"给我……一口水……求你了……我愿意做任何事……"'];
+
+const OWNED_MIND_POOL=[
+  '（怎么还不来……身体好热……那里痒得受不了……）',
+  '（主人什么时候回来……好想被抱……好想被摸……）',
+  '（乳头又硬了……想被主人的手指捏着揉……♡）',
+  '（下面那个洞一直在收缩……好想被填满……）',
+  '（讨厌……明明是被强迫的……为什么身体这么期待……）',
+  '（好想吃主人的鸡巴……含在嘴里的感觉……♡）',
+  '（又在想那种事了……越来越离不开主人了……）',
+  '（鸡巴自己硬了……没有主人碰都这样……好丢人……）',
+  '（主人……快来……穴里面好空……受不了了……♡）',
+  '（嘴上说讨厌……被操的时候明明爽得要死……）',
+  '（好无聊……想让主人用鞭子抽我……至少能感受到主人的存在……）',
+  '（越来越喜欢主人了……这算是斯德哥尔摩吗……才不是……♡）',
+  '（屁股里好空……想要主人的鸡巴……想要被灌满……）',
+  '（又湿了……明明什么都没做……光是想到主人就……）',
+  '（讨厌讨厌讨厌……可是被操的时候真的好舒服……呜……）',
+  '（主人的味道……好想闻……好想靠近……♡）',
+  '（乳头被揉过的地方还在发热……那种酥麻的感觉挥之不去……）',
+];
+
+const ORAL_LOW=[
+  '强行掰开紧咬的牙关将手指探入口腔，舌头缩在口腔深处拼命躲避，上下牙齿猛然合拢咬住了入侵的手指，钻心的痛感从指尖炸开，抽回手的同时一巴掌扇在脸颊上，清脆的掌声在房间里回响，脸颊瞬间泛起五个指印状的红痕，嘴角因为巴掌的力道渗出了一丝血丝。',
+  '嘴巴紧闭死死咬着牙不肯张开，眼睛里满是警惕和敌意，捏住下巴强行掰开的时候牙齿在手指上留下了深深的齿痕，被迫张开的口腔里能看到缩在后面的舌头在发抖，一巴掌扇过去让对方的脑袋猛地偏向一侧，被打懵的间隙嘴巴不自觉地张开了一瞬。',
+];
+const ORAL_GAG=[
+  '开口器将嘴巴强行撑成了一个圆形的洞，牙齿被金属环顶住无法合拢，舌头暴露在外面无处可藏，唾液从撑开的嘴角不受控制地往外淌，龟头对准那个被强制打开的入口直接推了进去，口腔内壁温热湿滑的触感包裹住了整个前端，无法闭合的嘴巴让喉咙完全失去了防御能力，柱体长驱直入抵达了喉咙深处。',
+  '金属口枷的冰凉质感抵着齿列将嘴巴撑到了极限，面颊两侧的肌肉被拉扯得酸痛，口水像断了线的珠子从下巴滴落，整张脸因为被迫张嘴的姿态变得既狼狈又色情，粗壮的柱体不用任何前戏直接捅进了被撑开的口腔，龟头碾过舌面推开软腭撞进了喉咙口，没有牙齿的阻碍这张嘴变成了一个完全敞开的肉洞。',
+  '口枷把嘴撑成了一个无法合拢的O形入口，从外面能清晰看到口腔内部粉红色的舌头和咽喉深处的暗影，唾液失去了闭合嘴唇的封堵后沿着下巴和脖子往下流弄湿了整个胸口，柱体从那个被迫打开的洞口长驱直入，喉咙在异物入侵时本能地收缩挤压着龟头，发出的声音从嘴巴里传出来变成了含混不清的呜咽和干呕。',
+];
+const ORAL_FORCE=[
+  '一手扣住后脑勺一手捏着下巴将柱体强行塞入还在抗拒的口腔中，龟头碾过舌面时能感觉到舌头在拼命往后缩试图抵抗入侵，无视所有挣扎继续深入直到龟头顶到了喉咙口引起了剧烈的干呕反射，喉咙口的肌肉在呕吐反射中猛烈收缩着挤压着龟头像是一只湿热的手在握紧。',
+  '扣住头发将脑袋固定住像操穴一样操着那张被撑开的嘴，柱体在口腔和喉咙之间快速进出，每次深入都能看到脖颈前方鼓起一个短暂的凸起，来不及吞咽的唾液和前液的混合物从撑开的嘴角和鼻孔溢出来弄湿了整张脸，喉咙已经被反复的抽插搞得麻木开始不自觉地适应入侵物的存在。',
+  '将整根柱体全部塞入口腔直到囊袋贴上了下巴，鼻尖埋进了耻毛里呼吸被完全堵死，喉咙口被龟头撑开后像是一个温热的肉套紧紧箍着柱体的前端，维持着深喉的姿势几秒钟后猛然抽出，被拔出的瞬间喉咙深处涌出大量混合着唾液和前液的黏稠液体从嘴里喷出来挂在下巴和胸口。',
+];
+const ORAL_CUM=[
+  '在喉咙深处释放的瞬间能感觉到咽喉口的肌肉在精液冲击下不自觉地做出了吞咽动作，滚烫的液体直接灌入了食道深处连味道都来不及感受就被咽了下去，抽出来后嘴角还挂着白色的黏稠液体和唾液的混合物，喉结上下滚动着在余波中继续做着吞咽的反射动作。',
+  '射在喉咙最深处的液体量大到一次吞咽根本无法全部咽下，多余的白浊从撑开的嘴角溢出来沿着下巴往下流在锁骨处汇成一条蜿蜒的白色溪流，鼻腔里也呛出了一些液体，从鼻孔流出来和脸上的泪水混在一起，整张脸变得一塌糊涂。',
+];
+const ORAL_MID=[
+  '勉强张开嘴接纳了进入的柱体，舌头僵硬地贴在口腔底部不知道该怎么配合，嘴唇不太情愿地包裹住柱体表面，在口中缓慢抽送时偶尔用舌面蹭过龟头的冠状沟引起一阵快感，吞吐的动作生涩笨拙像是第一次含棒棒糖的孩子，口腔分泌的唾液逐渐增多让柱体在嘴里变得湿滑。',
+  '虽然不再抗拒地张开了嘴，含住柱体时的表情依然写满了不情愿和隐忍，舌头在柱体表面缓慢地移动偶尔碰到敏感区域时能感觉到嘴里温度微微升高，吞吐的节奏忽快忽慢完全找不到规律，嘴巴被撑得有些酸但还是坚持着没有用牙齿。',
+];
+const ORAL_HIGH=[
+  '主动凑上来张开嘴用舌尖先舔了一圈龟头冠状沟，然后嘴唇紧密地包裹住柱体开始有节奏地吞吐，舌头灵活地在柱体腹面的筋脉上来回舔舐，吞到深处时喉咙主动放松让龟头探入咽喉口，鼻尖贴近耻骨时深深吸了一口气，退出时用嘴唇在龟头上拖出啵的一声湿响，整套动作流畅到像是被训练了无数次。',
+  '跪趴在身前仰起脸来用虔诚的目光看着上方，双手抱着大腿的同时嘴巴含着柱体做着深度的吞吐运动，舌头缠绕着柱体在口中做了一个螺旋形的旋转，喉咙在深喉时完全放松发出了咕啾的吸吮声，退到龟头处时用舌尖在马眼上快速拨动了几下，然后再次深深吞入吸吮的力度让两颊微微凹陷进去。',
+];
+
+const T={};
+T.whip=[
+  '皮鞭破空而来，鞭梢精准地咬在腰侧肌肤上，一道浅红色的楞痕在雪白的腰线上迅速浮起，被打中的那一刻身体几乎是弹跳起来的，手腕上的锁链哗啦作响，嘴唇咬得发白却仍挡不住从喉咙深处挤出来的嘶哑叫声。',
+  '鞭子以一个刁钻的角度抽在臀瓣最丰满的弧度上，柔软的臀肉在击打下猛烈颤抖，鞭痕呈现出一道深粉色的弯曲弧线，臀缝间甚至能看到因恐惧或别的什么而微微收缩的穴口，整个人绷成了一张弓，颤栗从尾椎一路攀升至后颈。',
+  '这一鞭故意落在大腿内侧最柔嫩的皮肤上，那片几乎不见阳光的嫩肉瞬间泛起刺目的红痕，双腿本能地想要合拢却被脚踝上的铁环拉开固定，只能无助地感受着皮革擦过嫩肉后残留的灼热刺痛，大腿根部细密的汗珠混着别的液体往下淌。',
+  '连续三鞭密集地落在后背肩胛骨之间的位置，每一下都带着清脆的破空声和沉闷的击打声的叠加，三道交错的红痕在白皙的背部画出了一幅受刑图，脊椎两侧的肌肉剧烈痉挛着，嘴里发出的已经不是叫喊而是断断续续的哽咽和抽气声。',
+  '鞭尖故意在胸前绕了一圈后甩出，精准地掠过一侧乳尖，那颗小巧的凸起被鞭梢扫过的瞬间整个乳晕都缩紧了，疼痛和某种难以启齿的酥麻同时从胸口炸开，身体猛地向后仰去，铁链发出急促的碰撞声，嘴唇颤抖着发出一声变了调的惊叫。',
+  '这次鞭击落在了脚底板的正中央，从未被如此对待过的脚心在鞭子接触的一瞬间就条件反射地蜷缩起脚趾，剧烈的刺痛从脚底传遍全身每一根末梢，整个人像触了电般弓起身体然后重重摔回地面，眼泪终于不受控制地滚落下来打湿了下巴。'
+];
+T.hand_nipple=[
+  '两根手指捏住那颗粉嫩的乳尖向外拉扯，柔软的乳肉被拽成细长的锥形，指腹感受到乳头在指间逐渐变硬充血的过程，松手后弹回去的乳尖已经变成了深粉色微微肿胀的状态，被拉扯过的地方泛着浅浅的指痕，整个胸膛都在微微颤动。',
+  '用掌心覆盖住整个乳晕缓慢地揉搓画圈，粗糙的掌纹碾过每一寸敏感的肌肤，乳头在掌心下面越来越挺立越来越硬，能清晰地感受到它像一颗小小的果核那样抵着手心，被揉弄得发烫的乳晕边缘泛起一层薄薄的红晕，呼吸声在安静的房间里显得格外急促。',
+  '用指甲轻轻刮过乳头顶端那个微小的凹陷，这个动作引起的反应比预想的更加剧烈，整个上半身猛地缩了一下，乳尖瞬间充血挺立到几乎发硬的程度，周围的乳晕也跟着紧缩成皱褶状，能看到细微的鸡皮疙瘩从胸口一路蔓延到锁骨和脖颈。',
+  '大拇指和食指同时捏住两侧乳头向不同方向拧转，左边顺时针右边逆时针，这种不对称的刺激让大脑完全无法适应，两颗乳尖被拧得红肿发亮像两颗熟透的浆果，松手后留下的圆形指印印在乳晕上格外扎眼，胸口剧烈起伏着从喉间泄出破碎的呜咽。',
+  '将乳头整个含入口中吸吮的同时用舌尖反复弹拨那颗硬挺的小凸起，温热的口腔和灵活的舌头制造出的刺激让整个胸腔都在发颤，唾液混着体温将乳头浸泡得湿润发亮，松口时拉出一条晶亮的丝线，被唾液濡湿的乳尖暴露在空气中引起一阵细密的战栗。',
+  '用冰凉的金属尺面贴上被揉弄得发烫的乳头，温差带来的刺激让全身猛地一个激灵，乳尖在冰冷的接触下反而更加挺立充血，金属表面上凝结出一层薄薄的水雾，移开时乳头已经变成了深红色微微发胀的状态，碰一下都会让全身过电般地颤抖。'
+];
+T.hand_cock=[
+  '五指合拢握住那根半勃的柱体从根部缓缓撸动到顶端，拇指指腹碾过龟头冠状沟的那一刻，整根柱体在掌心里明显跳动了一下迅速充血变硬，前端的小孔渗出一颗透明的液珠在指尖拉出一条细丝，腰肢不受控制地向上挺动想要追逐那个给予快感的手掌。',
+  '用指尖沿着柱体背面那条凸起的筋脉一路从根部划到顶端，像是在弹奏某种乐器，每经过一个敏感的节点都能感受到身下的人猛烈地颤抖，那根东西在指尖的撩拨下完全硬挺起来向上弯曲着贴近小腹，前端泛着水光的龟头涨成了深紫红色。',
+  '手掌包裹住囊袋轻轻揉捏，里面两颗圆润的东西在掌心里滚动，用指腹按压囊袋根部和会阴之间的那个柔软区域的时候，腰部猛地弹起来了好几厘米，喉咙里发出一声又短又尖的叫声，柱体在完全没有被触碰的情况下自己颤抖着吐出了一股前列腺液。',
+  '用两根手指捏住龟头像拧瓶盖一样缓慢地旋转研磨，指腹在湿滑的前端表面反复碾过马眼和冠状沟，这种精准到残忍的刺激让大腿根部的肌肉绷得死紧，脚趾蜷缩着在地面上抓出白痕，那根被折磨得胀硬通红的东西不停地弹跳着渗出液体。',
+  '掌心沾满了润滑用快速而有力的节奏上下撸动，手指在柱体上留下的每一道滑腻的轨迹都带来一波密集的快感，囊袋随着撸动的频率不停地拍打在手腕上发出黏腻的声响，整个下半身的肌肉都在不自觉地收紧，嘴里含混不清地发出求饶或催促的声音。',
+  '用指甲非常轻地刮过柱体前端那个敏感的小缝，这种介于痛感和痒感之间的微妙刺激让整个身体都在发抖，大腿内侧的肌肉痉挛着夹紧又被强行掰开，那根被反复折磨的东西胀硬到几乎发青的程度，前端持续不断地流出透明的黏液弄湿了整个小腹。'
+];
+T.hand_hole=[
+  '手指抵在紧闭的穴口轻轻画圈按压，褶皱的入口在指腹的抚摸下逐渐放松，一个指节缓缓探入温热紧致的甬道内部，内壁像有生命一样立刻裹紧了入侵的手指，能感觉到柔软的肉壁在指尖周围规律地收缩着，像是在试探又像是在挽留。',
+  '两根手指并拢旋转着探入已经被初步开拓过的穴口，内壁的褶皱在手指表面摩擦出细微的触感，弯曲指节向前壁按压时精准地顶到了一个略微凸起的柔软区域，整个人像被电击中一样猛地弓起腰来，穴口痉挛般地绞紧了手指，黏液从指缝间溢出来。',
+  '三根手指交替伸入穴口做扩张的动作，每次撑开都能看到内壁嫩红湿润的肉壁随着手指的动作翻卷外露，括约肌已经被充分拉伸到能容纳三指并排的程度，指尖在内部弯曲勾刮的时候能明显感觉到内壁变得越来越柔软越来越湿滑，穴口边缘泛着水光。',
+  '手指猛然深入穴中直到指根全部没入，内壁在毫无防备的突然刺激下激烈地收缩绞紧，温热黏腻的触感包裹着整根手指，快速抽插几下之后又猛地抽出，穴口在空虚感中不自觉地翕动着像一张小嘴在开合呼吸，边缘的嫩肉被磨得通红发亮。',
+  '将手指深深探入内部后微微弯曲做出"来"的手势，精准反复地按压那个藏在内壁深处微微凸起的腺体，每一次按压都引起全身剧烈的颤抖和痉挛，穴口随着刺激的节奏一缩一缩地裹着手指，从深处涌出的黏液越来越多沿着臀缝往下流淌弄湿了身下。',
+  '将拇指和食指同时探入穴口向两侧撑开做出观察的动作，内壁深处粉红色的褶皱层层叠叠一览无余，穴口被撑开后暴露在空气中的内壁敏感地收缩着试图合拢，往里面轻轻吹一口气就能引起从穴口蔓延到全身的剧烈颤栗和压抑不住的呻吟。'
+];
+T.hand_pussy=[
+  '手指沿着紧闭的花瓣外缘轻轻划过，两片柔软的唇瓣在指尖的触碰下微微张开露出里面浅粉色的嫩肉，指腹拨开花瓣按压上阴蒂的瞬间整个身体都绷紧了，那颗小巧的凸起在指尖下面跳动着越来越硬，蜜液从花穴深处缓缓渗出来打湿了指尖。',
+  '两根手指拨开湿润的花唇探入温热紧致的花穴内部，柔软的内壁紧紧包裹住入侵的手指像是在吸吮，弯曲指节按压前壁粗糙区域时花穴猛地绞紧了手指，蜜液在抽插的过程中发出黏腻的水声，花唇被手指带出的淫液弄得亮晶晶泛着水光。',
+  '拇指按住已经充血挺立的阴蒂快速揉搓画圈的同时两根手指在花穴内部大幅度屈伸抽动，双重刺激让整个下半身都在不受控制地痉挛，花穴内壁随着高频率的手指运动分泌出大量蜜液，黏腻的水声和急促的喘息声充斥着整个房间，大腿根部的肌肉紧绷到发颤。',
+  '将三根手指并拢缓慢地推入花穴深处直到指根没入，内壁被充分撑开后能清晰感受到每一层褶皱的纹路和温度，手指在深处旋转搅动的时候甚至能触碰到宫口的边缘，那处比其他地方更加柔软敏感的区域一被触及就引起全身猛烈的抽搐和嘶哑的叫声。',
+  '手掌覆盖在整个花穴上方用掌心的温度和力量进行持续的按压揉搓，花唇在掌心下面被碾压得完全张开，阴蒂花穴入口会阴所有敏感区域被同时刺激，蜜液从指缝间溢出弄湿了整个掌心，身下的人已经无法控制地扭动着腰肢迎合掌心的压力。',
+  '用指尖非常轻柔地在花穴入口处反复进出只探入一个指节的深度就退出来，这种浅尝辄止的刺激比深入更加折磨人，花穴不断收缩着试图吸住那根若即若离的手指，入口处的嫩肉被反复摩擦得通红发亮，从深处涌出的蜜液越来越多几乎像是在流水。'
+];
+
+T.sex_hole=[
+  '前端抵在被充分扩张过的穴口缓缓施压推入的过程像是在克服层层叠叠的阻力，温热紧致的内壁从四面八方裹了上来用柔软的肉壁包覆住每一寸进入的柱体，完全没入后两人交合处紧密贴合不留一丝缝隙，能感觉到内壁在适应异物存在的过程中规律地蠕动收缩。',
+  '缓缓抽出只留前端然后猛力贯入到底的动作让穴肉在剧烈的摩擦中发出湿润的黏腻声响，每次深入都精准地碾过内壁最敏感的那个凸起，穴口被反复撑开的边缘已经从浅粉变成了充血的深红色，从结合处挤出来的白色黏液泡沫沾满了整个会阴和囊袋。',
+  '加速到近乎暴烈的频率不间断地冲撞着穴口，臀肉被撞击得不停颤动发出清脆的肉体碰撞声，内壁在高速摩擦中变得越来越湿热越来越松软，穴口被操弄得完全无法合拢只能像喘息一样一张一合地裹着进出的柱体，从深处溢出的肠液混着前液弄得到处都是。',
+  '用力地捞起身下人的腰肢让上半身完全贴在地面上臀部高高翘起的姿势在体内更深的位置开辟出新的空间，改变角度后每一次挺入都顶到了前所未有的深度，内壁最深处那层柔软到几乎没有实感的组织被反复碾压，被顶到深处时发出的叫声已经完全失去了语言的形态。',
+  '在最深处停下来缓慢地旋转研磨，柱体在穴内画着圆圈碾过每一寸内壁，这种区别于抽插的持续刺激让穴口不停地痉挛收缩，内壁像有无数张小嘴在吸吮整根柱体，从交合处渗出来的混合液体沿着大腿内侧缓缓流下来在地面上积成小小的水洼。',
+  '保持着深深插入的状态将身下的人翻了个身让两人面对面，变换体位的过程中柱体在穴内做了将近半圈的旋转，搅动的每一度都碾过不同位置的敏感区域引起连锁反应般的内壁痉挛，翻身完成后面对面继续开始抽送，能清晰看到对方被操弄得失神的表情和不断溢出泪水的眼角。'
+];
+T.sex_pussy=[
+  '龟头抵在湿润微张的花穴入口轻轻研磨了几下便顺着蜜液的润滑缓缓推了进去，花穴内壁像是融化的丝绸一样裹了上来，比后穴更加湿热更加柔软的触感从结合处传来，能感觉到花穴深处在柱体推进的过程中层层张开又紧紧吸附住每一寸入侵的硬物。',
+  '整根没入花穴后缓慢而深入地抽送，每次退出时花穴内壁恋恋不舍地吸吮着柱体像是要把它留在体内，再次推入时蜜液被挤出来发出咕叽咕叽的水声，宫口在柱体前端反复戳刺下微微张开，被顶到那处时从喉咙深处涌出的声音介于疼痛和快感之间难以分辨。',
+  '抽插的频率逐渐加快，花穴在高速摩擦中分泌出大量蜜液把整个结合处都弄得湿淋淋的，两瓣花唇在柱体进出时被翻卷带出又被推入压回，嫩红的花肉被操弄得充血红肿，阴蒂因为耻骨的反复碰撞而被间接刺激着已经硬到发颤每碰一下都引起全身的痉挛。',
+  '猛力顶入最深处时柱体前端抵住了宫口那个柔软的小凸起，被撞击到子宫入口的刺激太过强烈以至于花穴在那一瞬间绞紧到近乎痛苦的程度，身下的人整个身体都弓了起来嘴里发出一声近乎尖叫的呜咽，大量蜜液从深处涌出来顺着柱体和花唇的缝隙往外溢。',
+  '将双腿架到肩膀上用几乎对折的姿势从上方向下贯入花穴，这个角度让柱体能够以最大限度的深度和最精准的角度碾过前壁的敏感区域和宫口的边缘，每一次撞入都让腹部微微鼓起一个隐约可见的弧度，花穴被操弄到极限后开始不自主地律动痉挛不需要额外刺激就能带来潮涌般的高潮。',
+  '在花穴深处做大幅度的旋转研磨，柱体在穴内像搅拌棒一样碾过每一寸内壁的褶皱和凸起，蜜液在搅动中被打出细密的泡沫从花穴口溢出来，内壁深处的组织被反复碾压后变得极度敏感，已经分不清是在高潮还是在高潮的间隙，整个花穴都在持续不断地痉挛和收缩。'
+];
+T.egg_vib=[
+  '小小的跳蛋贴上乳尖的瞬间嗡嗡的震动透过薄薄的皮肤传递到整个乳房，被震动搅乱的神经末梢让乳头在几秒钟内就完全充血挺立变成了深粉色的小硬粒，震动持续传递到胸腔内部引起一种酥麻到骨头里的触感让呼吸骤然变得又浅又急促，上半身不自觉地弓起来想要把乳尖贴得更紧。',
+  '跳蛋被推入穴口后震动从内壁深处传遍了整个下腹，紧致的内壁紧紧裹着那个不断嗡鸣的小东西像是要把它吸到更深的地方去，震动经过穴壁传导到前列腺的区域引起了持续不断的酸胀和快感的叠加，腿根开始不受控制地颤抖，黏液从穴口沿着臀缝缓缓流淌。',
+  '调高了一档后震动的频率变得更加密集更加不可忍受，整个下半身的肌肉都在随着震动的节奏不自觉地收缩放松收缩放松，内壁在高频震动下变得异常敏感，甚至能感觉到每一次震动波峰碾过穴壁褶皱时带来的精准刺激，腰部开始不受控制地扭动画圈试图找到更多的快感。',
+  '将两颗跳蛋同时启动分别贴在两侧乳尖上，双重震动制造出的对称刺激让大脑瞬间过载，两个乳头在各自的跳蛋下面争先恐后地充血肿胀挺立，胸口像是有两团火在同时燃烧，上半身不受控制地扭动着想要甩开那种过于密集的快感，嘴里发出含混不清的呜咽和喘息。',
+  '跳蛋贴在龟头冠状沟下方那个最敏感的凹陷处固定住，集中而持续的震动让那根东西在几秒钟内就完全胀硬起来几乎弯成弧形贴上小腹，前端在高频震动下不断渗出透明的液体像一个被打开了阀门的水龙头，整个下体都在随着震动痉挛性地颤抖着，脚趾蜷缩得快要抽筋。',
+  '将跳蛋推入花穴深处让它抵在宫口附近的位置开到最大档，宫口被震动直接刺激的感觉太过强烈以至于整个人像是被电流贯穿了一样从头顶到脚趾都在发麻，花穴内壁在震动中分泌出大量蜜液把那颗嗡嗡作响的小东西完全浸泡其中，蜜液从穴口溢出顺着大腿内侧向下流。'
+];
+T.plug=['肛塞被缓缓旋转着推入已经被初步扩张的穴口，锥形的塞体从尖端到底座逐渐变粗的过程让括约肌在每一毫米的进入中都被迫张开到更大的幅度，整个塞体完全没入后穴口猛地咬紧了塞体最窄的颈部将宽大的底座牢牢卡在外面，被填满的饱胀感从穴内蔓延到整个小腹。','塞体的表面布满了规律排列的凸起颗粒，每次身体微微移动都能感觉到那些颗粒在内壁上碾磨，产生持续不断的异物感和若有若无的刺激，穴口被塞体撑开后微微外翻的嫩肉紧紧箍着塞体颈部，能看到穴口边缘已经从最初的苍白变成了充血后的嫩红色。','大号肛塞被强行推入穴口的过程让括约肌在极限的拉伸中发出了几乎可以听到的声响，最宽的部分通过穴口的那一刻整个人都绷直了身体嘴里发出一声嘶哑的叫声，塞体完全没入后内壁紧紧包裹住它的每一寸表面，被填满到极限的饱胀感让小腹微微鼓起，每次呼吸都能感觉到塞体在内部跟随腹压的变化而微微移动。','试图站起来行走但体内的塞体随着每一步都在内壁上产生移位和摩擦，底座在走动时被臀肉挤压进而推动塞体在穴内旋转，这种持续的内部刺激让双腿发软走出几步就不得不扶住墙壁，汗水从后背和额头沁出，穴口紧咬着塞体颈部的嫩肉被反复拉扯得通红发亮。','将塞体整个拔出的过程比推入时更加折磨，最宽的部分从穴口退出时括约肌被从内到外地撑开，穴口像一朵被迫绽放的花一样在塞体通过的瞬间完全张开露出内部红润湿滑的肉壁，塞体完全退出后穴口维持着被撑开的状态好几秒才缓缓合拢，边缘的嫩肉微微颤抖着泛着水光。','两个不同尺寸的肛塞交替使用，先用小号充分开拓后换上大号进入，不同粗细带来的填充感的落差让内壁在每次更换时都会产生剧烈的收缩反应，穴口在反复被不同程度撑开的过程中变得越来越柔软越来越松弛，最后换回小号时已经能感觉到明显的空虚感，穴口失去了最初的紧致开始不自觉地翕动。'];
+T.dildo=['假阳具的硅胶头部抵在穴口施加稳定的压力缓缓推入，仿真的纹路和凸起在进入过程中摩擦着内壁每一寸褶皱，当假阳具的头部碾过前列腺区域时能看到身下的人明显地弓起了腰肌肉像过电一样绷紧，整根没入后停顿了两秒让内壁充分感受被填满的饱胀然后开始有节奏地抽送。','加快了抽送的速度，假阳具在穴内快速进出发出黏腻的水声，内壁被高速摩擦得通红发热分泌出大量润滑液让每一次抽插都变得更加顺滑，穴口被反复操弄的边缘已经微微外翻，粉红色的嫩肉裹着假阳具的柱体随着抽送的节奏翻卷进出，从穴内溅出的液体弄湿了整个臀缝。','用力将假阳具旋转着深深插入穴中让仿真的头部抵住深处最柔软的那个区域，然后维持着深入的状态开始在内部做小幅度的旋转碾磨，龟头模型上的凸起在穴壁上画出一个又一个圆圈每一圈都碾过不同区域的敏感点，这种持续的内部刺激比简单的抽插更加让人发疯身体开始不受控制地颤抖和痉挛。','双手握住假阳具的底座将它完全拔出然后以极快的速度猛然贯入到底，整个过程在不到一秒内完成穴口从完全张开到被猛力撑开的转变引起了从穴口到大脑的一整条神经链的剧烈反应，嘴里发出的声音已经不像是人类能发出的音调，穴口在粗暴的对待下红肿到微微发紫。','将假阳具调整到震动模式后推入穴内，仿真造型的震动和普通跳蛋完全不同，整根柱体的震动面积和深度让穴内每一寸内壁都处于持续的高频刺激中，前列腺区域被震动直接覆盖后产生的快感密集到让大脑完全空白，身体不停地痉挛颤抖穴口裹着震动的假阳具发出嗡嗡的声响混合着湿润的水声。','将假阳具插入花穴深处模拟真实性交的节奏缓慢而深入地抽送，仿真的头部每次推入都精准地碾过前壁那个粗糙的敏感区域然后顶到宫口的边缘，蜜液在假阳具和花穴内壁的摩擦中被搅出细密的泡沫，抽出时花唇裹着假阳具翻卷出来的嫩红花肉上沾满了晶亮的蜜液发出色情的水声。'];
+T.vibrator=['震动棒的圆润前端抵在龟头最敏感的冠状沟上开到中档，集中而持续的高频震动通过龟头传递到整根柱体让每一寸都在细微地颤动，前端的小孔在震动刺激下不间断地渗出透明的液体顺着柱体往下流弄湿了囊袋和腿根，整个下半身像是被电流持续贯穿着无法停下颤抖。','震动棒的前端贴着乳头画圈，圆润光滑的表面带着强劲的嗡鸣声碾过每一寸乳晕的皮肤，乳尖在震动的持续刺激下迅速充血肿胀到发硬像一颗小小的肉粒凸起在乳晕中央，整个乳房都在因为震动而微微颤动，连带着胸腔内部也产生了一种酥麻到发痒的共振感。','将震动棒缓缓推入穴口，棒身的直径比手指粗得多撑开穴口时就引起了一阵不适的呻吟，等整根没入后开启震动，粗壮的棒体在穴内的震动面积远超跳蛋，内壁的每一寸褶皱都处于震动的覆盖范围内，快感从穴内扩散到整个下腹再到大腿根部，身体像是一根被拨动的琴弦持续不断地颤动。','将震动棒抵在会阴那个柔软的区域开到最高档，强烈的震动通过皮肤和肌肉传递到前列腺的位置形成了一种从外到内贯穿的刺激，整个下半身的肌肉在高频震动下不受控制地绷紧又松弛，大腿根部快速颤抖着夹紧了震动棒不肯放开，前端在没有任何直接触碰的情况下自己弹跳着渗出液体。','震动棒抵在充血挺立的花核上开启最强档，那颗敏感的小凸起在剧烈的震动下几乎要陷入棒头的凹陷中，从花核传来的快感像闪电一样劈开了整个下腹的神经网络，花穴在没有任何东西进入的状态下开始剧烈收缩，蜜液从穴口喷涌而出打湿了震动棒和握着它的手指，大腿痉挛着夹紧又被强行掰开。',
+'将震动棒横放在两颗囊袋下方的会阴区域缓缓滚动按压，震动通过柔软的皮肤传递到内部的腺体和管道引起了一种深层的酸胀感，那根完全没有被触碰的柱体在震动的间接刺激下自己慢慢硬了起来前端开始渗液，整个人蜷缩着发出低沉绵长的呻吟声，像是被从内部缓慢融化。'
+];
+T.beads=['拉珠的第一颗小珠推入穴口时几乎没有什么阻力，光滑的表面和适中的尺寸让它顺利地滑入了温热的甬道内部，内壁立刻裹紧了那颗圆珠能感觉到它在穴内随着呼吸微微滚动，穴口在吞入第一颗后微微张合着像是在品味那种被填充的新鲜感觉。','珠子一颗接一颗被推入穴口每一颗都比前一颗大上一圈，括约肌在每次吞入时都要经历从收紧到被撑开再到猛然咬合的过程，到第四颗时穴口已经被撑到了相当可观的程度，能看到穴口边缘的嫩肉被圆珠撑得薄到近乎透明泛着充血后的深粉色，嘴里的呻吟声随着每一颗的进入变得越来越破碎。','所有珠子全部吞入后绳子从穴口垂下来像一条尾巴，体内串成一排的圆珠占据了甬道的大部分空间让内壁被撑得满满当当，每一颗珠子之间的连接处在穴壁的褶皱间形成了独特的凹凸触感，稍微移动一下身体就能感觉到整串珠子在内部做出连锁反应般的滚动，快感和异物感同时从多个位置传来。','猛然拽住绳子将整串珠子从穴口一次性拉出的瞬间，每一颗珠子通过括约肌时都带来一次猛烈的刺激，六颗珠子在不到两秒钟内接连弹出穴口发出连续的啵啵声响，穴口在珠子高速通过时被反复撑开合拢撑开合拢的过程让整个身体像是被电击了六次一样连续痉挛，拉出后穴口在空虚中猛烈收缩着久久无法合拢。','将珠子推入花穴内部，光滑的圆珠在蜜液的润滑下一颗接一颗滑入温热湿润的花穴深处，花穴内壁比后穴更加柔软更加敏感，每一颗珠子的进入都能引起一阵细密的颤抖和从喉咙深处溢出的甜腻呻吟，珠子在花穴内被蜜液浸泡得湿滑温热，从穴口垂下来的绳子已经被蜜液浸透了。','缓慢地一颗一颗地将珠子从穴口拉出，每颗珠子通过穴口时括约肌都会经历一次完整的张合过程，珠子带着体温和黏液弹出穴口时发出色情的水声，间隔几秒拉出一颗的节奏比一次性拉出更加折磨人，到最后一颗时穴口已经被反复刺激得通红发亮微微外翻，身体在每次珠子通过时都无法控制地颤抖和抽搐。'];
+T.nipple_clamp=['金属夹子的齿口咬合在乳头根部的那一刻，尖锐的压迫感从乳尖炸开传遍了整个胸腔，被夹住的乳头在金属的挤压下变得深红几乎发紫，夹子两侧溢出的乳肉被挤成小小的肉褶，疼痛和一种奇异的酥麻感在胸口此起彼伏地交替出现让呼吸变得又浅又急促。','两侧乳头都被上了夹子之后用一条细链连接在一起，每次身体移动都会牵动链条进而拉扯两侧乳头，链条的重量让夹子在乳头上产生持续的下坠拉力，走动时链条晃动拽着两颗被夹得红肿的乳尖左右摇摆，疼痛感和被束缚的羞耻感让眼眶很快泛了红泪水在眼眶里打转。','松开了一侧的夹子让血液重新涌入被压迫已久的乳头，重新恢复血液循环的过程比被夹着时更加疼痛十倍，乳头在血液回流的瞬间胀大到原来体积的近两倍变成了充血后深红近紫的颜色，碰一下就像被火烧了一样引起全身猛烈的弹跳和嘶哑的尖叫。','用手指弹了一下被夹子长时间钳制后已经变得异常肿胀敏感的乳头，轻轻一弹就像在身体里引爆了一颗炸弹，从乳尖到脊椎到大脑的整条神经通路都被这一下弹击点燃，身体不受控制地弓起来嘴里发出一声介于惨叫和呻吟之间的声音，眼泪终于从眼角滑落。','将夹子从最松的档位逐渐旋紧，每紧一格乳头承受的压力就增加一分，能看到乳头在逐渐增大的挤压下被迫变形凸出夹口之外的部分变得越来越红越来越肿，到最紧的档位时乳头已经被压缩成一个扁平的深紫色小片，疼痛让全身都在细微地发抖呼吸断断续续嘴唇咬出了血印。','在被夹着乳头的状态下进行其他部位的调教，每一次身体的颤动和挣扎都会牵动胸前的夹子产生额外的拉扯刺激，被夹住的乳头像两个持续释放疼痛信号的源头让所有快感都被染上了一层尖锐的痛觉底色，双重刺激的叠加让感官变得极度敏锐，连微风拂过皮肤都能引起过度的反应。'];
+T.cock_ring=['锁精环扣在柱体根部缓缓收紧的过程能清晰地看到被环箍住的地方血管在皮肤下面凸起，环以上的柱体因为血液被截留而迅速充血胀大变得比平时粗硬了一整圈，颜色从正常的肤色变成了深红近紫的涨色，龟头因为充血而变得格外饱满光滑前端的小孔微微张开渗出透明的前液。','在锁精环的束缚下柱体保持着完全勃起的状态无法软下来，任何微小的刺激都被放大了数倍，连走路时大腿内侧的布料擦过柱体表面都能引起剧烈的颤抖和呻吟，被迫维持的充血状态让整根柱体变得异常敏感，每一根青筋每一寸皮肤都像是暴露在外的神经末梢。','尝试给予足够多的刺激让身体到达临界点，所有的反应都表明已经到了释放的边缘，囊袋紧缩上提柱体根部的肌肉不停地痉挛，通往高潮的每一个生理信号都已经启动，锁精环却堵死了最后的出口，被强行截断的高潮让整个身体陷入了一种介于极乐和极苦之间的混沌状态，嘴里发出的声音已经完全失控。','在环的持续束缚下被反复带到高潮边缘又被拉回来，每一次逼近临界点又被阻止释放的过程都比上一次更加折磨，到了第三次的时候整个下半身的肌肉都处于持续痉挛的状态无法停止，前端不断渗出的透明液体已经把整个小腹和大腿根部弄得湿淋淋的，眼神已经完全失焦嘴唇张合着发出含混的求饶声。','终于松开了锁精环的瞬间，被压抑到极限的释放像溃堤一样猛烈地喷涌而出，柱体在脱离束缚后疯狂地弹跳着将积蓄的液体远远地射了出去，释放的过程持续了比正常情况长得多的时间，每一波痉挛都伴随着一声嘶哑的叫喊，结束后整个人像是被抽空了所有力气瘫软在地面上好久都无法动弹。','在佩戴锁精环的状态下对后穴或花穴进行插入操作，前方被锁住的充血柱体在体内被操弄的过程中不断接收到前列腺或宫口传来的快感信号却无处释放，两种刺激在体内形成了一个封闭的快感循环越积越多越来越强烈，整个身体像一个被不断充气的容器在极限边缘颤抖着随时都有可能崩溃。'];
+T.candle=['蜡液从燃烧的烛芯滴落到胸口正中央的位置，温热的蜡液在接触皮肤的瞬间带来一种介于温暖和灼烧之间的刺激感，液态的蜡迅速在皮肤表面凝固变成一个圆形的红色蜡点，被蜡液碰触过的皮肤泛起了鲜明的粉红色，疼痛是短暂的心理上的恐惧和期待却在持续发酵。','将蜡烛倾斜到极低的角度让蜡液以细线的形式从锁骨一直淋到小腹，凝固的蜡痕像一条蜿蜒的红色溪流勾勒出腹部微微起伏的轮廓，蜡液流经肚脐时在那个小小的凹陷中积聚了一小池，温热从肚脐传遍了整个下腹，身体随着蜡线的延伸不停地颤栗着发出压抑的嘶嘶声。','蜡液精准地滴落在乳头正上方仅仅几毫米的位置，离乳尖那么近却没有直接落上去的折磨比直接命中更加难以忍受，每一滴蜡液落下时乳尖都会条件反射地缩紧充血，像是在恐惧中等待那不知何时到来的直接打击，胸口的起伏越来越剧烈呼吸声变成了带着哭腔的喘息。','在大腿内侧那片从未经受过刺激的嫩白皮肤上密集地滴落蜡液，每一滴都像是一个微小的灼烫在柔嫩的皮肤上炸开，密集的蜡点很快覆盖了整个大腿内侧从膝盖上方一直到腿根最柔软的部分，被蜡液覆盖的皮肤在蜡层下面剧烈地发烫发红，双腿不停地想要合拢躲避却被固定得死死的只能承受。','用手指将已经凝固的蜡片从皮肤上揭下来的过程带走了一层极薄的死皮，露出下面嫩红敏感到极点的新皮肤，这层被蜡液"保护"过的皮肤比其他地方敏感了好几倍，指尖轻轻触碰就引起剧烈的弹跳和惊叫，大面积揭蜡后留下的粉红色痕迹让整个身体看起来像是一件被标记过的艺术品。','蜡液猛然滴落在花穴上方的阴阜区域，灼热的蜡液在稀疏的毛发和敏感的皮肤上凝固，温度通过皮肤传导到下面的阴蒂和花唇引起了一阵强烈的收缩反应，花穴口在热刺激下不自觉地翕动收紧又放松，蜜液在受到刺激后从穴口缓缓渗出与周围凝固的蜡边缘融合在一起形成了色情的混合物。'];
+T.blindfold=['黑色的丝绒眼罩蒙上双眼后世界陷入了彻底的黑暗，失去视觉的瞬间其他所有感官都像是被拧大了音量，能听到自己心跳声像鼓点一样急促地敲打着胸腔，皮肤上每一寸暴露在空气中的部分都变得格外敏感，连空气的流动都能让汗毛根根竖起，身体在黑暗中变得格外僵硬和警觉。','在看不见任何东西的状态下突然被触碰了后颈，那个本来只是轻柔的触碰在黑暗中被放大了十倍变成了一种电击般的刺激，全身猛地一个激灵差点从地上弹起来，因为不知道下一秒会在哪个部位被碰触而产生的未知恐惧让每一次等待都充满了极端的紧张感，呼吸声变得又快又浅。','蒙着眼睛的状态下被同时刺激了多个敏感部位，因为看不见所以完全无法预判下一波刺激来自哪里用什么力度，每一次突如其来的触碰或插入都引起过度反应的惊叫和弹跳，身体在黑暗中完全失去了抵抗的节奏只能被动地接受从各个方向涌来的快感和痛感的随机轰炸。','在黑暗中被强制等待了很长一段时间没有任何触碰，寂静和未知制造出来的心理压力比任何道具都更加有效，能听到自己的呼吸声越来越粗重，皮肤上的每一个毛孔都像是张开了嘴在等待什么，当触碰终于降临时已经敏感到了极限的身体给出了超乎寻常的剧烈反应。','蒙眼的同时戴上了隔音耳塞，视觉和听觉被同时剥夺后只剩下触觉味觉和嗅觉在运作，在这种近乎感觉剥夺的状态下身体的触觉敏感度提升到了一个恐怖的程度，指尖在皮肤上的任何触碰都像是在灵魂上写字，每一个动作的意义都被无限放大。','蒙着眼的状态下被进行穴内探索，因为看不到所以只能通过体内的触感来感受手指或道具的每一寸移动和每一次弯曲，这种纯粹依靠内部触觉来感知的过程让穴壁变得极度敏感，能分辨出手指指节的每一个关节和指甲的形状，内壁的每一寸褶皱都像是在用全部的注意力来"观察"入侵的异物。'];
+T.urethral=['纤细的尿道棒前端涂满了润滑缓慢地对准马眼那个微小的开口抵了上去，棒体的直径经过精心计算刚好能够进入尿道口而不会造成损伤，前端接触到尿道内壁的那一刻一种从未体验过的酸胀感从柱体内部炸开向整根柱体的表面扩散开来，这种来自内部的刺激和任何外部触碰都完全不同。','尿道棒一点一点地向更深处推进，每深入一毫米都能感觉到尿道内壁紧紧包裹着棒体表面的那种极端的内部触感，棒体经过尿道中段某个特别敏感的弯曲区域时整个人都僵住了嘴巴大张着却发不出任何声音，那种从柱体最核心处传来的触电般的感觉让大脑一片空白。','将尿道棒缓慢旋转着抽出再推入模拟着某种极端的内部抽插，柱体在这种操作下从内到外地颤抖着渗出液体，尿道内壁被棒体反复摩擦后变得极度敏感每一次棒体的移动都能引起从马眼到龟头到柱体根部到囊袋整条线路的连锁快感反应。','尿道棒的震动功能被开启后那种从柱体最深处传来的持续嗡鸣让所有外部的刺激都黯然失色，整根柱体在内部震动的作用下像是被赋予了自己的生命不停地颤抖弹跳，前端在尿道棒的存在下无法正常排出液体只能从棒体和尿道壁的缝隙间艰难地渗出。','带着尿道棒的状态下同时接受后穴或花穴的插入，体内的棒体和体外的柱体或道具之间仅隔着一层薄薄的组织，两种刺激在体内交汇叠加形成了一种无法用语言描述的复合快感，从内到外从前到后所有的敏感区域都在同时被刺激，身体在过载的快感中开始不受控制地连续痉挛。','尿道棒被完全抽出的那一刻尿道口因为长时间被撑开而维持着微微张开的状态，从尿道深处涌出的液体混合着前列腺液顺着棒体离开的轨迹从马眼涌出，被扩张过的尿道内壁在空虚中敏感地收缩着，柱体在失去内部填充物后反而变得更加敏感，外部的任何触碰都能引起从尿道传来的回响般的快感。'];
+T.fleshlight=['飞机杯的入口处柔软的硅胶唇瓣包裹住龟头的瞬间就能感受到内壁密布的凸起纹路在冠状沟上碾磨，杯体被缓缓套到底部的过程让整根柱体都被温热紧致的仿真内壁包裹住，内部螺旋状的纹路在柱体表面制造出层次丰富的摩擦感，比手掌的触感更加精准更加密集。','快速地上下套弄飞机杯，杯口的硅胶唇瓣在龟头冠状沟上反复滑动碾压产生了极其密集的快感，内壁的凸起颗粒在高速运动中对柱体每一寸表面都进行着不间断的刺激，从杯口溅出的润滑液和前液的混合物弄湿了整个手掌和囊袋，急促的喘息声和黏腻的水声交织在一起。','将飞机杯套住柱体保持不动只用腰部的力量向杯内抽送，模拟真实性交的动作让快感变得更加真实强烈，杯体内壁的仿真褶皱在每次挺入时都紧紧吸附住柱体表面像是不想放开，抽出时又像是在挽留，柱体在反复的摩擦中迅速充血到极限前端开始持续渗出液体。','用加热过的飞机杯包裹住柱体，接近体温的温热感从杯壁传递到柱体每一寸皮肤上让触感变得更加逼真，温热的内壁和柔软的凸起纹路配合着稳定的套弄节奏制造出持续不断的快感波浪，整个下半身的肌肉都在不自觉地绷紧，腰肢开始不受控制地配合杯体的运动向上挺动。','在柱体已经被飞机杯刺激到极度敏感的状态下突然停止运动让杯体包裹着柱体保持不动，被过度刺激后又突然失去运动的落差感让身体陷入了一种焦灼的渴求状态，柱体在杯内不停地跳动膨胀试图通过自己的抽搐来获取更多的摩擦，前端不断渗出液体润滑着已经湿透了的杯壁内部。','将飞机杯开到震动模式让整个杯体都在嗡嗡颤动，密布凸起的内壁在震动中对柱体表面每一个敏感区域进行着全方位的高频刺激，龟头在杯底深处被震动和凸起的双重夹击搞得完全失控，整根柱体在杯内疯狂地跳动着，从马眼涌出的液体和润滑混合成黏稠的泡沫被震动搅得噗嗤作响。'];
+
+T.horse=['被按在木马上坐下的那一刻，固定在马背上的假阳具整根贯入被充分扩张的穴口，整个人的重量都压在了那根硬物上让它深入到了从未到达过的深度，穴口被马背的弧度撑到了极限，完全坐下后能感觉到假阳具的前端抵在了甬道最深处的柔软区域，身体在重力和填充感的双重作用下完全无法动弹只能僵硬地坐在上面。','木马随着推动开始前后缓慢地摇晃，每次晃动都让体内的假阳具在穴中做出小幅度的活塞运动，木马向前倾斜时假阳具被推到最深处顶住敏感的前壁，向后倾斜时又退出一截穴口咬着柱体颈部不肯放手，这种被动的节奏让身体完全无法适应也无法控制只能任由木马的摇摆驱使快感一波接一波地涌来。','加快了木马摇晃的频率，假阳具在穴内高速抽插着像是一台不知疲倦的机器，穴口被粗壮的柱体反复碾磨得通红发亮边缘的嫩肉已经微微外翻，从穴内被搅出来的黏液在马背上积成一小摊水渍，骑在上面的人已经失去了所有支撑力量全靠绑在身上的绳索才没有从马背上摔下去，嘴里发出的声音已经不成调。'];
+T.rope_walk=['双腿跨在半空中绷紧的粗绳上，绳子恰好卡在会阴的位置将柔嫩的皮肤压出一道深深的凹痕，绳面粗糙的纤维刺激着那片极度敏感的区域，被要求沿着绳子一步一步往前走的时候每踏出一步绳子都会在会阴和穴口之间来回摩擦，第一个绳结碾过花穴或穴口的触感让腿根猛地痉挛差点失去平衡。','走到第三个绳结的时候双腿已经软得几乎站不住了，每个绳结都比绳面高出一截通过敏感区域时就像是一个小小的凸起强行碾过最脆弱的地方，绳结碾过阴蒂时的刺激尤其剧烈，整个人都要蜷缩起来却因为站在绳上不得不保持平衡，大腿内侧和会阴已经被绳面磨得通红发热渗出了混合着汗液和蜜液的液体。','走到终点时腿间已经变成了一片狼藉，绳子上留下了一条湿漉漉的痕迹，会阴和穴口的皮肤被粗糙的绳面反复磨蹭后变得极度敏感红肿，碰一下就像被火烧到，双腿在完成全程后彻底失去了力量瘫倒在地面上，大腿根部不停地痉挛抽搐，身体从腰到膝盖的整个区域都泛着明显的潮红。'];
+T.cross=['四肢被宽大的皮革束带固定在十字架的四个末端展开成大字形，每一寸皮肤都暴露在空气中无处可藏，胸口大腿内侧腹部腋下所有平时被遮掩保护的柔嫩区域此刻全部坦诚在面前，被强制展开的姿势让肌肉处于轻微拉伸的状态，任何挣扎都只是让束带勒得更紧留下更深的红痕。','悬挂在十字架上的姿势让重力成为了额外的调教工具，身体的重量通过四肢的束带分散悬吊着，这种持续的悬吊感让肌肉从疲劳开始慢慢转变为酸痛，每一处被束缚的地方都能感受到皮革和皮肤之间越来越紧密的贴合，长时间的束缚让意志力一点一点地被消磨殆尽。','在十字架上完全展开的姿势下被同时使用多种道具，因为四肢被固定住无法做出任何防御或躲避的动作，所有的刺激都只能全盘接受，这种彻底丧失了身体自主权的状态让所有的感受都被放大了，每一次道具触碰身体的感觉都比自由状态下强烈得多，无法闭合双腿也无法护住胸口的无助感让服从度在潜移默化中不断攀升。'];
+T.cage=['被推进狭窄的铁笼里蜷缩成一团，笼子的空间只够一个人侧躺着把膝盖抱到胸前，冰凉的铁栏杆贴着裸露的皮肤带来持续的寒意，口中被塞入了软质的口塞堵住了所有的语言只剩下鼻腔里含糊的嗡嗡声，蜷缩在笼中无法伸展的逼仄感慢慢地开始侵蚀着最后的抵抗意志。','在笼中度过了漫长的时间后从笼子里被拖出来，在重新站起来的瞬间差点直接摔倒，长时间蜷缩导致的肌肉僵硬让四肢像是不属于自己的，取下口塞后嘴巴因为长时间被撑开已经合不拢了，唾液从嘴角淌下来，眼神里曾经有过的所有锐利和抵触都消失了，剩下的只有空洞中透出的顺从和畏惧。','再次被关进笼子的时候已经不再挣扎了，主动把身体蜷缩起来让自己适应笼子的形状，接受口塞时嘴巴乖乖地张开，眼神中带着某种认命的平和，笼门关上铁锁扣紧的声音在安静的房间里回响得格外清晰，蜷缩在笼中的身体微微颤抖着，分不清是因为冰凉的铁栏杆还是别的什么原因。'];
+T.swing=['身体被皮质秋千托起悬吊在半空中，四肢分别固定在秋千四角的金属环上，失去了地面支撑后全身的重量都压在了腰臀和大腿与皮质接触的几个受力点上，悬空的姿态让所有肢体都处于微微张开的状态，从任何角度都能毫无遮挡地触及身体的每一寸。','秋千被推动后开始前后摆荡，每次晃到前方时臀部最高身体形成一个弧形，背后等待着的道具或手掌精准地在回荡的最低点迎上来，重力和摆动的惯性让每一次接触的力度都被放大了，悬吊的姿态让身体无法借力也无法躲避只能在空中随着秋千的节奏被动地迎接一波又一波的冲击。','在秋千上悬吊了足够长的时间后皮质带子在腰臀和大腿根部留下了深深的勒痕，那些被长时间压迫后重新恢复血液循环的区域变得极度敏感，解开束缚将身体放下来的时候四肢因为长时间悬吊而酸软到无法站立，瘫倒在地面上的身体上留着对称的红色勒痕像是某种仪式性的纹样。'];
+
+T.maid=['穿着女仆装跪在地上进行调教的画面充满了视觉上的冲击力，黑色蕾丝围裙的下摆随着身体的颤抖微微晃动，白色围裙系带在腰后打成蝴蝶结的位置恰好露出被鞭打得泛红的臀部，过膝白色长袜勒在大腿上把腿肉挤成微微鼓起的弧度，裙摆被掀起后里面的风光与优雅的女仆外表形成了极其强烈的反差。','被要求保持女仆的礼仪用敬语回答所有问题的同时接受调教，每次在快感中咬牙切齿地挤出"是的主人请吩咐"的时候声线都在发颤断裂，蕾丝头饰歪到了一边被汗水浸湿的碎发贴在脸颊上，围裙的前胸部分因为身体的扭动和挣扎已经皱成一团，从领口歪斜的缝隙能看到里面被夹红的乳尖。'];
+T.catear=['猫耳发箍上的毛绒耳朵随着身体的每一次颤抖而微微晃动，项圈上挂着的小铃铛在喘息中发出清脆的叮铃声，尾巴肛塞的柔软毛尾从臀缝间伸出来随着臀部的摇晃左右摆动，每次拉扯尾巴时尾根处的肛塞在穴内转动碾磨，牵引出一连串黏腻的水声和从喉咙深处挤出来的像猫咪一样细碎的呜咽声。','被命令用"喵"来回答所有问题，每答错一次尾巴就被用力向外拉扯，肛塞的最宽处卡在穴口进退两难的感觉让发出的"喵"声带上了明显的颤音和哭腔，铃铛在剧烈的挣扎中叮叮当当响个不停，猫耳歪到了一边整个人看起来像一只被欺负狠了的流浪猫又狼狈又色情。'];
+T.bunny=['高叉连体衣紧贴身体的每一条轮廓，腰侧大面积裸露的皮肤上细密的汗珠在灯光下闪着微光，连体衣的裆部那一条窄窄的布料已经被体液浸得变了颜色紧紧地嵌入了缝隙里，网袜从大腿根部一直延伸到脚踝中途被撕开了一个大洞露出里面被揉捏得红肿的皮肤，绒球尾巴肛塞在臀部微微翘起一团白色的绒毛在深色衣料的衬托下格外显眼。','连体衣的肩带被拉下来挂在手臂上露出整个胸部，被解放出来的乳尖因为长时间被紧身衣料摩擦已经充血肿胀到极其敏感的程度，连体衣堆积在腰间把腰身勒得更加纤细，上下都暴露在外的身体和卡在中间变成装饰品的兔女郎装形成了一种被剥夺到一半的色情感比完全赤裸更加刺激视觉。'];
+T.nurse=['白色护士短裙的前胸被体液和汗水浸透后变成了半透明状态，胸口的纽扣在挣扎中崩开了两颗露出被乳夹钳制着的红肿乳尖，护士帽歪歪斜斜地挂在被汗水打湿的头发上随时都要掉下来，白色丝袜从脚踝延伸到大腿的弹性面料上沾染了几道可疑的液体痕迹，整套护士装从整洁变成凌乱的过程本身就是一场视觉上的调教记录。','被要求用"体检"的名义对自己的身体进行展示和触碰，用听诊器贴在胸口的时候因为金属的冰凉在乳尖上引起了剧烈的缩紧反应，被命令张开嘴接受"口腔检查"时橡胶手套探入口腔搅动舌头的触感让口水不受控制地从嘴角流下来滴在衣领上把白色衣料染成了透明。'];
+T.schoolgirl=['百褶裙被掀到腰间露出里面的全部风光，裙摆的褶子像扇面一样展开搭在腰上变成了某种装饰性的框架，白色过膝袜的弹性袜口在大腿上勒出的肉感痕迹微微鼓起，制服衬衫的下摆从裙腰中扯出来皱巴巴地堆在胸口上方，被松开的领带垂在胸前随着身体的晃动左右摇摆，这副被蹂躏过的学生装扮比任何设计精良的情趣服装都更加具有冲击力。','被按趴在调教台上用"补习"的名义接受惩罚，百褶裙翻上去后暴露在空气中的臀部一览无遗，每一下落在臀瓣上的"教鞭"都让裙边随着震动微微抖动，白色袜子的膝盖处跪在硬质台面上已经磨出了起球的痕迹，制服衬衫被汗水浸透后贴在后背上清晰地勾勒出脊椎和肩胛骨的轮廓。'];
+T.nun=['修女服黑色的长袍从肩膀垂落到脚踝将整个身体笼罩在庄严肃穆的布料之下，白色的头巾和围胸布严严实实地遮住了头发和脖颈，胸前垂挂着的十字架项链随着身体的颤抖在黑色衣料上轻轻摇晃，掀开长袍的下摆时里面的光景与外面神圣的装扮形成了极端的反差，被迫以跪姿接受调教的模样像是一场亵渎神灵的仪式。','修女头巾被扯歪后露出了被汗水打湿贴在额头的碎发，十字架项链在剧烈的挣扎中被甩到了肩背处，黑色长袍的前襟被撕开后胸口的苍白皮肤暴露在幽暗的灯光下与外层深色衣料的对比让人目眩，被命令含着十字架接受调教的时候嘴唇咬着金属的十字发出含混的呜咽，神圣与淫靡在同一个画面里碰撞出了令人窒息的张力。'];
+T.latex=['全身紧密包裹的黑色胶衣像是第二层皮肤贴合在身体的每一个弧度和凹陷上，乳头鸡巴腹部线条臀缝所有轮廓都被胶质面料精准地勾勒出来，橡胶特有的光泽在灯光下泛着冷冽的反光，呼吸时胸腔的起伏让胶衣表面随之微微波动，密封的面料下面迅速积累起来的汗水让皮肤和胶衣之间变成了一个湿热滑腻的密闭空间。','胶衣上特意在关键部位设计的拉链被一条一条拉开，乳头处的圆形开口让两颗已经被闷热胶衣蒸得充血肿胀的乳尖从漆黑的橡胶中弹出来，裆部的拉链从前到后一拉到底让被闷在密封空间里的性器和穴口同时暴露在外面凉爽的空气中，温差刺激让所有露出的皮肤瞬间起满了鸡皮疙瘩，从胶衣开口溢出的汗液顺着橡胶表面滑落。'];
+T.qipao=['高开叉的女式旗袍紧贴着腰线和胯骨将身体曲线完整地勾勒出来，侧开叉一直开到大腿根部走动时大片白皙的腿肉从叉口若隐若现，旗袍下面没有穿任何内衣裤，挺立的乳尖透过丝绸薄料在胸前顶出两个微妙的凸起，坐下时开叉处的布料自然滑开完全暴露出腿根到腰际的所有风光，丝绸在体温的作用下微微泛着潮气贴在皮肤上。','旗袍的立领被解开后露出脖颈和锁骨的线条，盘扣被一颗一颗挑开的过程像是在拆一个精致的礼物，每解开一颗扣子丝绸面料就在身体上松开一分，当最后一颗盘扣被挑开时旗袍从双肩缓缓滑落堆积在腰间变成了一圈皱巴巴的丝绸腰带，上半身全部暴露在外而下半身还裹在紧窄的裙身里，这种半穿半脱的状态比全裸更加色情。'];
+T.lingerie=['三角形的蕾丝小奶罩只堪堪遮住乳晕的面积，大片的胸部皮肤从蕾丝边缘溢出来，细细的肩带在肩膀上留下浅浅的勒痕，透过蕾丝的镂空花纹能隐约看到下面乳头的颜色和形状，小三角蕾丝内裤的布料窄到只遮住了最核心的一条缝隙，两侧系带式的设计在胯骨上打着蝴蝶结，轻轻一拉就能让那片遮羞布彻底失去作用。','蕾丝奶罩被推上去堆在锁骨下方露出被蕾丝花纹压出印痕的乳房，被蕾丝面料长时间摩擦的乳尖已经处于半充血的敏感状态，拉开内裤侧面的蝴蝶结系带后三角布料失去了固定像一面小旗帜一样搭在一侧大腿上，被蕾丝勒出的红色印痕从腿根延伸到腰侧看起来像是被丝线捆绑过的痕迹。'];
+T.cowgirl=['奶牛纹的比基尼上衣在胸前只有两片小小的三角布料，黑白相间的花纹在丰满的胸部上显得格外色情，头顶戴着带有小牛角的发箍，脖子上挂着拴牛用的金属铃铛走动时叮当作响，超短的奶牛纹热裤紧紧裹着臀部勾勒出饱满的弧线，尾巴肛塞从热裤的开口处伸出来甩动着长长的牛尾巴。','吸奶器的硅胶吸盘吸附在胸前持续运作的时候，透过透明的导管能看到从乳头源源不断流出的乳白色液体被吸入收集瓶中，整个乳房在负压的作用下被拉伸成锥形吸入吸盘内部，乳头在持续吸吮下变得又长又红肿胀到原来体积的数倍，每一波负压脉冲都让身体跟着颤抖一下，牛铃在颤动中发出密集的碰撞声。'];
+
+T.aphrodisiac=['媚药的液体从嘴角被强行灌入后沿着食道一路灼烧到胃部，药效在几分钟内开始从小腹向全身扩散，皮肤表面开始泛起一层薄薄的粉红色潮红，体温在短时间内急剧上升，瞳孔开始不自觉地放大，呼吸变得又热又急促，身体深处有什么东西正在被迅速点燃，大腿不受控制地开始磨蹭。','药效完全发作后整个身体都陷入了无法自控的情动之中，皮肤上每一个毛孔都像是张开了嘴在渴求触碰，性器在没有任何物理刺激的情况下自己充血硬挺到发痛，后穴或花穴开始不自觉地收缩分泌出大量液体，意识还很清醒身体却完全不听使唤，嘴里开始不受控制地发出断续的呻吟和喘息。','媚药让性欲被强制拉到了一个正常情况下根本不可能达到的高度，全身每一寸皮肤都变成了敏感带，连衣料的触碰都能引起快感，穴口在空虚中疯狂收缩渴求被填满，鸡巴在无人触碰的情况下自己渗出大量前液弄湿了整个腿根，理智和羞耻心都在药效的碾压下土崩瓦解。'];
+T.ball_gag=['软质球形口塞被推入口腔将舌头压在下面，上下颌被圆球撑开到一个固定的角度，嘴唇紧紧箍着球体的赤道线无法闭合也无法张得更大，被封堵住的口腔失去了发音的能力所有的叫喊呻吟求饶都变成了含混不清的嗡嗡声和鼻腔里的闷哼，唾液失去了吞咽的通道从球塞和嘴唇之间的缝隙不受控制地外溢，亮晶晶的口水沿着下巴往下淌弄湿了整个脖颈和胸口。','塞着口球的状态下被进行高强度的调教，每一波快感到来时本能地想要张嘴叫喊却被口中的球塞堵得死死的，声音从鼻腔里挤出来变成了细碎的呜咽和急促的哼鸣，因为无法用嘴呼吸只能用鼻子急促地喘息，鼻翼翕动的频率越来越快，口水在无法吞咽的情况下积攒了一大滩从嘴角流到了胸口再流到了腹部。','长时间佩戴口球后下颌的肌肉因为被迫维持张开的姿势而酸痛到发抖，取下口球的瞬间嘴巴已经合不拢了，口腔里积蓄的大量口水混着被球体压出来的泡沫从嘴里涌出来挂在下巴上拉出长长的丝线，舌头因为被压制太久变得麻木需要好一阵子才能恢复正常的活动能力。'];
+T.ring_gag=['金属或硅胶制成的O形环被固定在上下齿列之间将嘴巴撑成了一个圆形的洞，从外面能直接看到口腔内部粉红色的舌头和咽喉深处的暗影，这种完全敞开的状态让嘴巴失去了所有防御能力变成了一个随时可以被使用的入口，唾液从被撑开的圆形嘴角不间断地往外流，连吞咽的动作都因为口腔被固定打开而变得极其困难。','戴着开口器的状态下被强行灌入液体，因为嘴巴被撑开无法闭合液体从口腔灌入后只能依靠咽喉本能的吞咽反射来咽下，来不及吞咽的部分从嘴角和鼻腔溢出，呛咳的时候液体从被撑开的嘴巴里喷出来弄得满脸都是。'];
+T.enema=['灌肠管的细长前端被涂上润滑后缓缓探入穴口，管体在温热的甬道内一点一点向深处推进，当温热的液体开始通过管道缓缓灌入肠道内部时，一种从未体验过的灌满感从腹部深处扩散开来，小腹在液体的持续注入下开始微微隆起，肠道被液体撑开的膨胀感混合着液体温度带来的热感让腹腔内部产生了痉挛性的蠕动。','灌入的液体越来越多小腹已经明显鼓起像是吃了一顿丰盛的大餐，肠道在液体的重量和压力下不停地蠕动收缩试图排出异物却被紧紧堵住的管道挡住了出路，腹内的压迫感从胀满变成了酸痛再变成了难以忍受的坠胀，身体蜷缩起来双手捂着隆起的小腹嘴里发出断续的哀鸣和呜咽。','管道被拔出的瞬间括约肌在失去封堵后来不及收紧，大量温热的液体从穴口喷涌而出的失禁感彻底击碎了最后的尊严防线，液体混着肠液从穴口淌下来弄得身下一片狼藉，穴口在排出液体后疲惫地翕动着无力合拢，整个人瘫软在地上因为刚才的极限体验而全身颤抖着啜泣。'];
+T.milker=['吸奶器的硅胶吸盘对准乳头罩上去后启动了负压吸吮模式，节律性的负压脉冲将乳头反复吸入吸盘深处又释放，乳头在持续的负压作用下被拉伸到平时长度的两三倍变成了暗红色的圆柱形，每一次吸吮都像是有一张贪婪的嘴在用力地吸吮着乳尖。','乳头在吸奶器的持续作用下被拉得又长又肿胀，肿胀到顶端微微发白的乳尖在负压释放的间隙里泛着充血后的深红色，吸盘透明的罩体内除了被拉伸到极限的乳头之外什么液体都没有流出来，没有奶水的乳头被空吸的感觉只有纯粹的胀痛和酸麻，被无意义地吸吮着的空虚感和身体无法回应的挫败感混合在一起。','吸奶器在产奶的乳头上工作时透明导管里开始出现乳白色的液体，细细的奶水线条在管道内蜿蜒流淌最终汇入收集瓶中，乳头在出奶的状态下对负压的吸吮格外敏感每一次脉冲都能催出一股新的奶水，同时从乳尖传来一阵酸胀到令人腿软的快感，奶水的流出量随着吸吮的持续而逐渐增大，乳房在被不断抽空的过程中变得越来越柔软。'];
+
+// ===== 跳蛋按部位分类文本 =====
+T.egg_vib_nipple=[
+  '小小的跳蛋贴上乳尖的瞬间嗡嗡的震动透过薄薄的皮肤传递到整个乳房，被震动搅乱的神经末梢让乳头在几秒钟内就完全充血挺立变成了深粉色的小硬粒，震动持续传递到胸腔内部引起一种酥麻到骨头里的触感让呼吸骤然变得又浅又急促，上半身不自觉地弓起来想要把乳尖贴得更紧。',
+  '将两颗跳蛋同时启动分别贴在两侧乳尖上，双重震动制造出的对称刺激让大脑瞬间过载，两个乳头在各自的跳蛋下面争先恐后地充血肿胀挺立，胸口像是有两团火在同时燃烧，上半身不受控制地扭动着想要甩开那种过于密集的快感，嘴里发出含混不清的呜咽和喘息。',
+  '跳蛋被固定在乳尖上持续运转，微小的震动频率精准地碾过乳头上每一条细微的纹路，乳晕的皮肤在持续共振中变得极度充血敏感，从胸腔传来的酥麻感像水波一样向四周扩散，连锁骨和腋下的皮肤都跟着起了一层细密的颤栗。',
+  '在跳蛋贴着乳尖嗡嗡作响的时候用手指从外侧按压，把震动和手指的力道叠加在一起碾向乳头根部，被双重刺激夹击的乳尖胀硬到极致颜色变成了近乎发紫的深红，这种混合的快感让胸膛猛烈起伏着，从嘴唇间泄出的喘息带上了压抑的哭腔。',
+];
+T.egg_vib_hole=[
+  '跳蛋被推入穴口后震动从内壁深处传遍了整个下腹，紧致的内壁紧紧裹着那个不断嗡鸣的小东西像是要把它吸到更深的地方去，震动经过穴壁传导到前列腺的区域引起了持续不断的酸胀和快感的叠加，腿根开始不受控制地颤抖，黏液从穴口沿着臀缝缓缓流淌。',
+  '调高了一档后震动的频率变得更加密集更加不可忍受，整个下半身的肌肉都在随着震动的节奏不自觉地收缩放松收缩放松，内壁在高频震动下变得异常敏感，甚至能感觉到每一次震动波峰碾过穴壁褶皱时带来的精准刺激，腰部开始不受控制地扭动画圈试图找到更多的快感。',
+  '跳蛋在穴内深处跳跃着嗡鸣，每一次震动都让括约肌条件反射地绞紧，这种持续的内部震颤让穴壁分泌出大量黏液，从穴口边缘不断渗出的透明液体沿着臀沟往下流，大腿内侧被弄得湿漉漉的泛着水光。',
+  '将跳蛋调到脉冲模式推入穴口深处，强弱交替的震动节奏让内壁无法适应，每一次强震到来时穴肉猛烈收缩将跳蛋裹得更紧，弱震间隙又因为落差感而不自觉地翕动渴求更多，前列腺被间歇性的强震反复刺激，前端在没有任何触碰的情况下开始不间断地渗出液体。',
+];
+T.egg_vib_pussy=[
+  '将跳蛋推入花穴深处让它抵在宫口附近的位置开到最大档，宫口被震动直接刺激的感觉太过强烈以至于整个人像是被电流贯穿了一样从头顶到脚趾都在发麻，花穴内壁在震动中分泌出大量蜜液把那颗嗡嗡作响的小东西完全浸泡其中，蜜液从穴口溢出顺着大腿内侧向下流。',
+  '跳蛋在花穴内壁上不停震颤，柔软的穴肉像是受到了蛊惑一样紧紧吸附着那颗圆润的小东西，震动从宫颈口扩散到整个下腹再传导到大腿根部，花唇在外部也跟着微微颤动，阴蒂在间接震动的持续刺激下充血挺立得发痛。',
+  '跳蛋被精准地卡在花穴前壁最敏感的粗糙区域，那个位置对震动的反应格外剧烈，每一波频率都像是在那个G点上来回碾磨，花穴疯狂收 缩着试图把跳蛋吸到更深的位置，蜜液在持续震动中被搅成了泡沫从穴口溢出，整个下半身都在不自觉地痉挛扭动。',
+  '跳蛋抵在花穴深处的宫口边缘震颤着，那层薄薄的宫颈口在高频震动下微微张合，从子宫深处传来的酸麻快感像潮水一样席卷了整个腰腹，蜜液混着花穴深处的黏液从穴口大量涌出，花唇被蜜液浸泡得晶亮水润每一次震动都带着淫靡的水声。',
+];
+T.egg_vib_cock=[
+  '跳蛋贴在龟头冠状沟下方那个最敏感的凹陷处固定住，集中而持续的震动让那根东西在几秒钟内就完全胀硬起来几乎弯成弧形贴上小腹，前端在高频震动下不断渗出透明的液体像一个被打开了阀门的水龙头，整个下体都在随着震动痉挛性地颤抖着，脚趾蜷缩得快要抽筋。',
+  '将跳蛋用胶带固定在柱体最敏感的系带位置，那根东西在精准定位的持续震动下从半勃迅速充血到完全胀硬，马眼被震动的余波刺激得不停翕张渗出前液，连囊袋都跟着震动的频率微微颤动收缩，整个腰腹的肌肉都绷得死紧无法放松。',
+  '跳蛋从龟头缓缓滑到柱体中段再到根部，沿途每经过一条凸起的血管都引起局部的猛烈弹跳，到了根部和囊袋交界处时整个人的腰臀猛然离地，喉咙里挤出了一声变调的惊叫，那种从柱体根部传遍整个下腹的震动让前列腺也被间接刺激到。',
+  '将跳蛋夹在龟头和包皮之间的缝隙里开到最大档，被困在狭窄空间里的震动变得格外密集和集中，龟头最敏感的冠状沟在封闭式震动的夹击下迅速充血到发紫，前端的小孔在高频刺激下持续不断地涌出透明黏液，整根柱体跟着跳蛋的频率在手中疯狂颤动。',
+];
+
+// ===== 假阳具按部位分类文本 =====
+T.dildo_hole=[
+  '假阳具的硅胶头部抵在穴口施加稳定的压力缓缓推入，仿真的纹路和凸起在进入过程中摩擦着内壁每一寸褶皱，当假阳具的头部碾过前列腺区域时身下的人明显地弓起了腰全身绷紧，整根没入后停顿了两秒让内壁充分感受被填满的饱胀然后开始有节奏地抽送。',
+  '加快了抽送的速度，假阳具在穴内快速进出发出黏腻的水声，内壁被高速摩擦得通红发热分泌出大量润滑液让每一次抽插都变得更加顺滑，穴口被反复操弄的边缘已经微微外翻，粉红色的嫩肉裹着假阳具的柱体随着抽送的节奏翻卷进出，从穴内溅出的液体弄湿了整个臀缝。',
+  '用力将假阳具旋转着深深插入穴中让仿真的头部抵住深处最柔软的那个区域，然后维持着深入的状态开始在内部做小幅度的旋转碾磨，龟头模型上的凸起在穴壁上画出圆圈每一圈都碾过不同区域的敏感点，这种持续的内部刺激比简单的抽插更加让人发疯身体开始不受控制地颤抖和痉挛。',
+  '双手握住假阳具的底座将它完全拔出然后以极快的速度猛然贯入到底，整个过程在极短时间内完成穴口从完全张开到被猛力撑开的转变引起了从穴口到大脑的整条神经链的剧烈反应，嘴里发出的声音已经完全变了调，穴口在粗暴的对待下红肿到微微发紫。',
+  '将假阳具调整到震动模式后推入穴内，仿真造型的震动和普通跳蛋完全不同，整根柱体的震动面积和深度让穴内每一寸内壁都处于持续的高频刺激中，前列腺区域被震动直接覆盖后产生的快感密集到让大脑完全空白，身体不停地痉挛颤抖穴口裹着震动的假阳具发出嗡嗡的声响混合着湿润的水声。',
+];
+T.dildo_pussy=[
+  '将假阳具插入花穴深处模拟真实性交的节奏缓慢而深入地抽送，仿真的头部每次推入都精准地碾过前壁那个粗糙的敏感区域然后顶到宫口的边缘，蜜液在假阳具和花穴内壁的摩擦中被搅出细密的泡沫，抽出时花唇裹着假阳具翻卷出来的嫩红花肉上沾满了晶亮的蜜液发出色情的水声。',
+  '假阳具的仿真龟头顶开湿润的花穴口缓缓推入，柔软的花穴内壁像融化的丝绸裹了上来，比后穴更加温热更加柔嫩的触感让假阳具表面迅速被蜜液浸润，推到最深处时仿真头部抵住了宫口那个微微凸起的柔软区域，被顶到子宫入口时整个身体剧烈弹跳了一下发出了尖锐的叫声。',
+  '假阳具在花穴内做大幅度的旋转研磨，仿真的凸起纹路在穴内画着圆圈碾过每一寸褶皱和凸起，蜜液在搅动中被打出细密的泡沫从穴口溢出来，花唇被反复碾磨得充血红肿翻卷在外，内壁深处的组织在持续刺激下变得极度敏感，已经无法分辨是在高潮还是在高潮的间隙。',
+  '将假阳具开启震动模式后深深推入花穴，整根仿真柱体在花穴深处嗡嗡震颤，比普通跳蛋大得多的震动面积让花穴从入口到宫颈口的整条通道都处于持续共振中，蜜液在震动的搅拌下从穴口喷涌而出弄湿了大腿和身下的地面，花穴在过载的快感中持续痉挛收缩着。',
+];
+T.dildo_nipple=[
+  '用假阳具的仿真龟头碾过肿胀的乳尖，硅胶表面的凹凸纹路在充血的乳头上滚动摩擦制造出粗粝的刺激感，乳头被碾压得更加红肿外翻，仿真的冠状沟卡住乳尖向外拉扯时发出了一声压抑到极点的尖叫。',
+  '将假阳具横在胸前来回滚动按压两侧乳头，柱体的重量和硅胶的弹性在乳房表面制造出持续的碾压感，两颗乳头在滚动经过时被交替压扁又弹起，反复的刺激让乳晕周围泛起了大片的潮红。',
+];
+T.dildo_cock=[
+  '用假阳具的仿真头部抵在柱体前端的马眼上缓缓画圈研磨，两根仿真与真实的柱体头部对头部地碾磨在一起，敏感的龟头被另一个龟头造型的硅胶反复碾压刺激，前液从两个龟头的接触面渗出来把两根东西都弄得湿滑发亮。',
+  '将假阳具和真实的柱体并排握在手里同时撸动，两根粗细不同的柱体在掌心里并列滑动，真实柱体上凸起的血管和假阳具表面的仿真纹路互相摩擦制造出复合的触感，握在一起撸动的画面让羞耻感和快感同时达到了顶峰。',
+];
+
+// ===== 震动棒按部位分类文本 =====
+T.vibrator_nipple=[
+  '震动棒的前端贴着乳头画圈，圆润光滑的表面带着强劲的嗡鸣声碾过每一寸乳晕的皮肤，乳尖在震动的持续刺激下迅速充血肿胀到发硬像一颗小小的肉粒凸起在乳晕中央，整个乳房都在因为震动而微微颤动，连带着胸腔内部也产生了一种酥麻到发痒的共振感。',
+  '将震动棒的圆润前端按压在乳头正中央开到最大档，强烈的震动从乳尖传导到整个乳房再扩散到胸腔，乳头在高频震动下被完全碾平在棒头和胸部之间，抬起棒头时乳尖弹回来的瞬间充血到极限变成了深紫红色，碰一下就引起从胸口到腰腹的整条神经链的连锁反应。',
+];
+T.vibrator_cock=[
+  '震动棒的圆润前端抵在龟头最敏感的冠状沟上开到中档，集中而持续的高频震动通过龟头传递到整根柱体让每一寸都在细微地颤动，前端的小孔在震动刺激下不间断地渗出透明的液体顺着柱体往下流弄湿了囊袋和腿根，整个下半身像是被电流持续贯穿着无法停下颤抖。',
+  '将震动棒横放在两颗囊袋下方的会阴区域缓缓滚动按压，震动通过柔软的皮肤传递到内部的腺体和管道引起了一种深层的酸胀感，那根完全没有被触碰的柱体在震动的间接刺激下自己慢慢硬了起来前端开始渗液，整个人蜷缩着发出低沉绵长的呻吟声，像是被从内部缓慢融化。',
+  '将震动棒抵在会阴那个柔软的区域开到最高档，强烈的震动通过皮肤和肌肉传递到前列腺的位置形成了一种从外到内贯穿的刺激，整个下半身的肌肉在高频震动下不受控制地绷紧又松弛，大腿根部快速颤抖着夹紧了震动棒不肯放开，前端在没有任何直接触碰的情况下自己弹跳着渗出液体。',
+];
+T.vibrator_hole=[
+  '将震动棒缓缓推入穴口，棒身的直径比手指粗得多撑开穴口时就引起了一阵不适的呻吟，等整根没入后开启震动，粗壮的棒体在穴内的震动面积远超跳蛋，内壁的每一寸褶皱都处于震动的覆盖范围内，快感从穴内扩散到整个下腹再到大腿根部，身体像是一根被拨动的琴弦持续不断地颤动。',
+  '震动棒在穴内被推到最深处后开启高速震动模式，粗壮的棒体完全填满了甬道的空间让内壁被迫和棒身的每一寸表面紧密贴合，从穴口到深处的所有敏感区域都处于无差别的高频刺激中，穴口裹着棒身的边缘嫩肉被震动搞得不停颤动，从内部涌出的黏液沿着棒身和穴口的缝隙渗出来。',
+];
+T.vibrator_pussy=[
+  '震动棒抵在充血挺立的花核上开启最强档，那颗敏感的小凸起在剧烈的震动下几乎要陷入棒头的凹陷中，从花核传来的快感像闪电一样劈开了整个下腹的神经网络，花穴在没有任何东西进入的状态下开始剧烈收缩，蜜液从穴口喷涌而出打湿了震动棒和握着它的手指，大腿痉挛着夹紧又被强行掰开。',
+  '将震动棒缓慢推入花穴内部，粗壮的棒身撑开花唇挤入温热柔软的穴道，花穴内壁比后穴更加湿润也更加敏感，棒身开启震动后整条花穴通道都在嗡鸣中共振，蜜液被震动搅打成细密的泡沫从穴口咕唧咕唧地溢出来，阴蒂在棒身根部的间接震动下充血到发颤。',
+];
+
+// ===== 拉珠按部位分类文本 =====
+T.beads_hole=[
+  '拉珠的第一颗小珠推入穴口时几乎没有什么阻力，光滑的表面和适中的尺寸让它顺利地滑入了温热的甬道内部，内壁立刻裹紧了那颗圆珠，穴口在吞入第一颗后微微张合着像是在品味那种被填充的新鲜感觉。',
+  '珠子一颗接一颗被推入穴口每一颗都比前一颗大上一圈，括约肌在每次吞入时都要经历从收紧到被撑开再到猛然咬合的过程，到第四颗时穴口已经被撑到了相当可观的程度，穴口边缘的嫩肉被圆珠撑得薄到近乎透明泛着充血后的深粉色，嘴里的呻吟声随着每一颗的进入变得越来越破碎。',
+  '所有珠子全部吞入后绳子从穴口垂下来像一条尾巴，体内串成一排的圆珠占据了甬道的大部分空间让内壁被撑得满满当当，每一颗珠子之间的连接处在穴壁的褶皱间形成了独特的凹凸触感，稍微移动一下身体就能感觉到整串珠子在内部做出连锁反应般的滚动，快感和异物感同时从多个位置传来。',
+  '猛然拽住绳子将整串珠子从穴口一次性拉出的瞬间，每一颗珠子通过括约肌时都带来一次猛烈的刺激，珠子接连弹出穴口发出连续的啵啵声响，穴口在珠子高速通过时被反复撑开合拢撑开合拢的过程让整个身体连续痉挛，拉出后穴口在空虚中猛烈收缩着久久无法合拢。',
+  '缓慢地一颗一颗地将珠子从穴口拉出，每颗珠子通过穴口时括约肌都会经历一次完整的张合过程，珠子带着体温和黏液弹出穴口时发出色情的水声，间隔几秒拉出一颗的节奏比一次性拉出更加折磨人，到最后一颗时穴口已经被反复刺激得通红发亮微微外翻，身体在每次珠子通过时都无法控制地颤抖和抽搐。',
+];
+T.beads_pussy=[
+  '将珠子推入花穴内部，光滑的圆珠在蜜液的润滑下一颗接一颗滑入温热湿润的花穴深处，花穴内壁比后穴更加柔软更加敏感，每一颗珠子的进入都能引起一阵细密的颤抖和从喉咙深处溢出的甜腻呻吟，珠子在花穴内被蜜液浸泡得湿滑温热，从穴口垂下来的绳子已经被蜜液浸透了。',
+  '珠子在花穴内被蜜液浸润后变得格外滑腻，每一颗都在花穴柔软的褶皱间轻微滑动碾磨着敏感的内壁，花穴的收缩力比后穴更强，将珠子一颗颗咬得紧紧的，拉扯绳子时花唇被珠子从内部撑开翻卷出来的嫩红色花肉上挂着晶亮的蜜液丝线。',
+  '从花穴中缓慢拉出珠子的过程让花唇随着每一颗珠子的通过而张合翻卷，湿漉漉的圆珠带着浓稠的蜜液弹出穴口时发出的水声在安静的房间里格外清晰，每一颗拉出后花穴都不自觉地猛烈收缩一次像是在挽留即将离去的填充物，蜜液从空虚的穴口涌出来流满了整个会阴。',
+];
+T.beads_nipple=[
+  '将拉珠的珠链缠绕在肿胀的乳头根部然后缓慢拉扯，圆珠在乳头的根部滑动碾过每一寸敏感的乳晕皮肤，绕了几圈的珠链收紧后将乳头挤压得更加充血凸起，每一颗珠子的凸起都在乳肉上压出圆形的浅凹痕。',
+  '用珠链在乳尖表面来回滚动摩擦，光滑的圆珠表面和微凸的连接处交替碾过乳头顶端那个最敏感的凹陷，每经过一颗珠子乳头就颤抖着缩紧一次，连续的微刺激让乳尖充血到极限变得又硬又烫。',
+];
+T.beads_cock=[
+  '将珠链缠绕在充血的柱体上从龟头螺旋式地绕到根部，圆珠在柱体表面的每一条血管上滑动碾磨，缠绕的珠链在柱体表面制造出密集的凸起触感，每次轻轻拉扯珠链时所有珠子同时在柱体上滑动产生了覆盖整根柱体的连锁快感。',
+  '用珠链在龟头冠状沟上来回拉锯般地滑动摩擦，光滑的珠子在湿滑的前液润滑下流畅地碾过每一处敏感区域，这种精准而密集的微刺激让龟头充血到近乎发紫，前端的小缝在珠子碾过时不停地渗出液体。',
+];
+
+const IDLE_TEXTS={
+  low:['被束缚着不断挣扎铁链碰撞发出清脆的响声嘴里骂骂咧咧从污言秽语到威胁恐吓什么都往外蹦，锁链把手腕磨出了红痕都浑然不觉，眼睛里满是愤怒和不甘。','拼命扭动身体试图挣脱，体内的道具因为动作而嵌入更深的位置刺激得浑身剧烈发颤，恨恨地咬着嘴唇不肯发出任何声响，脖子上青筋凸起瞪着门的方向像要把走进来的人生吞活剥。','怒吼声渐渐变成了哑嗓的呜咽，体力在持续的挣扎中被消耗殆尽，嗓子喊得沙哑发不出完整的句子，身体虽然开始对持续的刺激产生了某种反应意志力还在拼命抵抗着，牙齿咬得咯咯作响。'],
+  mid:['安静地跪在地上，身体随着体内道具的震动节奏微微晃动，偶尔从鼻腔里漏出一声极力压低的喘息，大腿内侧因为持续的刺激染上了潮红，手指无意识地攥着自己的脚踝指节泛白。','低垂着头不说话也不反抗，汗珠从额角沿着下颌线滴落，体内的道具每一次震动都能从腰部的微微颤抖中看出来，嘴唇翕动着像是在默数着什么来转移注意力。','试图忍耐却忍不住发出断续的呻吟，每一声都被自己吞回去大半只剩下气音从齿缝间泄出，手指在地面上抓出白印又松开反复交替着。'],
+  high:['主动张开双腿调整姿势让道具进入更深的角度，半阖的眼中泛着迷离的水光，嘴角挂着失焦的微笑，嘴唇翕动着无声地呢喃着"主人"两个字。','跪趴在地上自行扭动腰肢让体内的道具产生摩擦，发出不加掩饰的甜腻呻吟，手指抓着地面身体像波浪一样起伏着，全身皮肤泛着情动后的淡粉色。','全身绵软地瘫在地面上四肢微微张开，眼神空洞地望着天花板嘴角挂着涎水，体内的道具在持续运作着引起周期性的全身颤抖，每隔几秒就发出一声绵长的叹息般的呻吟。']
+};
+
+const SHOP_ITEMS={
+  tools:[
+    {id:'whip',name:'皮鞭',icon:'🪢',price:80,desc:'调教基础用具。抽打身体可有效提升服从度与M属性。',effect:{obedience:[4,8],masochism:[3,6]},insertable:false},
+    {id:'egg_vib',name:'跳蛋',icon:'💊',price:120,desc:'小巧的震动玩具，可贴在乳头或塞入穴中持续刺激。',effect:{nipple:[4,7]},insertable:true,needsTarget:true},
+    {id:'plug',name:'肛塞',icon:'🔌',price:100,desc:'锥形塞体，用于长时间撑开后穴，适合初步开发。',effect:{hole:[5,8]},insertable:true},
+    {id:'dildo',name:'假阳具',icon:'🍌',price:150,desc:'仿真造型，可用于深度开发后穴或前穴。',effect:{},insertable:true,needsTarget:true},
+    {id:'vibrator',name:'震动棒',icon:'📳',price:180,desc:'强力马达棒状器具，外部或插入均可。',effect:{nipple:[3,5],cock:[4,7]},insertable:true,needsTarget:true},
+    {id:'beads',name:'拉珠',icon:'📿',price:130,desc:'由细到粗的圆珠，塞入后拉出产生强烈快感。',effect:{},insertable:true,needsTarget:true},
+    {id:'nipple_clamp',name:'乳夹',icon:'🔗',price:90,desc:'夹在乳头上施加持续压力让乳头变得异常敏感。',effect:{nipple:[6,10]},insertable:false},
+    {id:'cock_ring',name:'锁精环',icon:'⭕',price:110,desc:'套在根部限制释放让下体变得极度敏感。',effect:{cock:[6,9]},insertable:false},
+    {id:'candle',name:'低温蜡烛',icon:'🕯️',price:70,desc:'蜡液滴在皮肤上温热刺痛，服从性训练的经典手段。',effect:{obedience:[5,8]},insertable:false},
+    {id:'blindfold',name:'眼罩',icon:'🎭',price:60,desc:'遮蔽视觉后感官被极度放大任何触碰引起剧烈反应。',effect:{obedience:[3,6],nipple:[2,4],cock:[2,4]},insertable:false},
+    {id:'urethral',name:'尿道棒',icon:'🔩',price:200,desc:'极细棒体探入尿道内部，从内部刺激柱体带来前所未有的快感。',effect:{cock:[7,12]},insertable:false},
+    {id:'fleshlight',name:'飞机杯',icon:'🫙',price:160,desc:'仿真内壁的套筒型器具，包裹柱体提供密集摩擦刺激。',effect:{cock:[6,10]},insertable:false},
+    {id:'aphrodisiac',name:'媚药',icon:'💗',price:250,desc:'强力催情药物，使用后对象会主动求欢，大幅增加性瘾。消耗品。',effect:{addiction:[8,15]},insertable:false,consumeOnUse:true},
+    {id:'ball_gag',name:'口球',icon:'🔴',price:85,desc:'软质球塞堵住嘴巴无法说话只能流口水呜咽。',effect:{obedience:[4,7]},insertable:false},
+    {id:'ring_gag',name:'口枷',icon:'⭕',price:95,desc:'金属开口器撑开嘴巴，让口腔完全敞开随时待用。',effect:{obedience:[4,7],oral:[3,6]},insertable:false},
+    {id:'enema',name:'灌肠器',icon:'💉',price:120,desc:'向肠道内灌入液体，用于清洁或羞辱性调教。',effect:{obedience:[5,9],hole:[3,5]},insertable:false},
+    {id:'milker',name:'吸奶器',icon:'🍼',price:180,desc:'负压吸吮乳头。有奶水时可产奶，无奶水时只会将乳头吸得又大又肿。',effect:{nipple:[5,9]},insertable:false},
+  ],
+  costumes:[
+    {id:'maid',name:'女仆装',icon:'👗',price:200,desc:'黑白蕾丝围裙配过膝长袜。穿上后服从度训练加成。',bonus:'obedience_boost'},
+    {id:'catear',name:'猫耳套装',icon:'🐱',price:180,desc:'猫耳发箍搭配尾巴肛塞与铃铛项圈。后穴训练效果提升。',bonus:'hole_boost'},
+    {id:'bunny',name:'兔女郎装',icon:'🐰',price:220,desc:'高叉连体衣配网袜。暴露的设计令调教对象更加敏感。',bonus:'all_boost'},
+    {id:'nurse',name:'护士装',icon:'💉',price:190,desc:'紧身白衣短裙搭配丝袜。适合精细化训练。',bonus:'nipple_boost'},
+    {id:'schoolgirl',name:'学生制服',icon:'🎒',price:170,desc:'百褶短裙配白色过膝袜。禁忌的制服诱惑。',bonus:'cock_boost'},
+    {id:'nun',name:'修女服',icon:'✝️',price:210,desc:'黑色长袍白色头巾十字架项链。神圣与亵渎的冲撞。',bonus:'obedience_boost'},
+    {id:'latex',name:'全身胶衣',icon:'🖤',price:280,desc:'束缚全身的黑色胶质衣服。密封闷热让皮肤极度敏感。',bonus:'all_boost'},
+    {id:'qipao',name:'女式旗袍',icon:'👘',price:200,desc:'高开叉丝绸旗袍，下面不穿内衣。东方风情的极致诱惑。',bonus:'nipple_boost'},
+    {id:'lingerie',name:'蕾丝内衣',icon:'🩱',price:150,desc:'三角蕾丝小奶罩和小三角蕾丝内裤。欲遮还露。',bonus:'cock_boost'},
+    {id:'cowgirl',name:'奶牛装',icon:'🐄',price:250,desc:'奶牛纹比基尼配铃铛。需要能产奶才能穿戴。',bonus:'nipple_boost',requiresMilk:true},
+  ],
+  facility:[
+    {id:'horse',name:'木马',icon:'🐴',price:500,desc:'可摇晃的骑乘木马，背脊安装假阳具。永久提升后穴训练效果，可直接使用。',roomBonus:'hole',usable:true,useEffect:{hole:[5,9],addiction:[1,2]}},
+    {id:'rope_walk',name:'走绳',icon:'🪢',price:450,desc:'固定在半空的粗麻绳绳结碾过会阴和穴口。永久提升服从度，可直接使用。',roomBonus:'obedience',usable:true,useEffect:{obedience:[5,9],hole:[2,4]}},
+    {id:'cross',name:'十字架',icon:'✝️',price:550,desc:'大型X形束缚架全身暴露无遗。永久提升全属性，可直接使用。',roomBonus:'all',usable:true,useEffect:{obedience:[3,6],nipple:[2,4],cock:[2,4],hole:[2,4]}},
+    {id:'cage',name:'狗笼',icon:'🦴',price:350,desc:'仅能蜷缩其中的铁笼。永久提升服从度训练效果，可直接使用。',roomBonus:'obedience',usable:true,useEffect:{obedience:[6,10]}},
+    {id:'swing',name:'吊环秋千',icon:'🔄',price:600,desc:'悬吊式皮质秋千四肢固定后身体悬空。永久提升全属性，可直接使用。',roomBonus:'all',usable:true,useEffect:{obedience:[3,5],nipple:[3,5],cock:[3,5],hole:[3,5],addiction:[1,2]}},
+  ],
+  consumables:[
+    {id:'food_basic',name:'干粮',icon:'🍞',price:8,desc:'普通干粮，恢复少量饱食度。',feedType:'food',feedAmount:20},
+    {id:'food_good',name:'烤肉',icon:'🍖',price:18,desc:'炭火炙烤的肉食，恢复中等饱食度。',feedType:'food',feedAmount:50},
+    {id:'food_premium',name:'精致餐点',icon:'🍱',price:30,desc:'精心烹制的餐点，大幅恢复饱食度。',feedType:'food',feedAmount:85},
+    {id:'water_basic',name:'清水',icon:'💧',price:5,desc:'普通饮用水，恢复少量饥渴度。',feedType:'water',feedAmount:25},
+    {id:'water_good',name:'果汁',icon:'🧃',price:12,desc:'新鲜果汁，恢复中等饥渴度。',feedType:'water',feedAmount:55},
+    {id:'water_premium',name:'营养液',icon:'🧪',price:25,desc:'特制营养液，大幅恢复饥渴度。',feedType:'water',feedAmount:90},
+  ],
+  drugs:[
+    {id:'milk_drug_male',name:'产奶药（男用）',icon:'🧬',price:400,desc:'使正常男性的乳腺发育并开始泌乳。使用后永久获得产奶能力。',drugType:'milk_male'},
+    {id:'milk_drug_futa',name:'产奶药（双性用）',icon:'🧬',price:280,desc:'使双性人的乳腺开始泌乳。使用后永久获得产奶能力。',drugType:'milk_futa'},
+    {id:'pussy_drug',name:'长逼药',icon:'💊',price:500,desc:'使正常男性长出女性生殖器官变为双性人。使用后永久变为双性。',drugType:'grow_pussy'},
+  ],
+};
+
+const COSTUME_BONUS_MAP={
+  obedience_boost:{field:'obedience',mult:1.5,label:'服从度+50%'},
+  hole_boost:{field:'hole',mult:1.8,label:'后穴+80%'},
+  all_boost:{field:'all',mult:1.3,label:'全属性+30%'},
+  nipple_boost:{field:'nipple',mult:1.6,label:'乳头+60%'},
+  cock_boost:{field:'cock',mult:1.6,label:'鸡巴+60%'},
+};
+
+let gameState={started:false,day:1,hour:8,minute:0,gold:500,exp:0,level:0,reputation:5,rooms:[{id:0,occupied:false,dog:null,facilities:[],log:[]}],inventory:[],fontSize:14,currentGuest:null,activeRoomId:null,history:[],apiConfig:{url:'',key:'',model:''},ownedDogs:[]};
+const MAX_SAVE_SLOTS=3;
+
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function randInt(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function statLabel(k){return{obedience:'服从度',nipple:'乳头',cock:'鸡巴',hole:'后穴',pussy:'小穴',addiction:'性瘾',masochism:'M属性',oral:'口腔'}[k]||k;}
+function getShopItemById(id){for(const c of Object.values(SHOP_ITEMS)){const f=c.find(i=>i.id===id);if(f)return f;}return null;}
+function getItemById(id){return getShopItemById(id);}
+function getShopCategory(id){for(const[c,items]of Object.entries(SHOP_ITEMS)){if(items.find(i=>i.id===id))return c;}return null;}
+function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+function getStatKeysForDog(d){const k=['obedience','nipple','cock','hole','addiction','masochism','oral'];if(d.type==='双性'||d.grewPussy)k.splice(4,0,'pussy');return k;}
+function getAppearanceStage(v){return v<20?0:v<40?1:v<60?2:v<80?3:4;}
+function getRank(){return RANK_TABLE[gameState.level];}
+function formatTime(){return String(gameState.hour).padStart(2,'0')+':'+String(gameState.minute).padStart(2,'0');}
+
+function updateAppearance(d){
+  d.nippleAppearance=NIP_APP[getAppearanceStage(d.stats.nipple)];
+  d.cockAppearance=COCK_APP[getAppearanceStage(d.stats.cock)];
+  d.holeAppearance=HOLE_APP[getAppearanceStage(d.stats.hole)];
+  if(d.type==='双性'||d.grewPussy)d.pussyAppearance=PUSSY_APP[getAppearanceStage(d.stats.pussy||0)];
+  d.addictionAppearance=ADDICT_APP[getAppearanceStage(d.stats.addiction||0)];
+  d.masochismAppearance=M_APP[getAppearanceStage(d.stats.masochism||0)];
+  d.oralAppearance=ORAL_APP[getAppearanceStage(d.stats.oral||0)];
+}
+
+function getDogEnterLine(d){
+  if(d.owned)return pick(ENTER_OWNED);
+  if(d.stats.addiction>=50&&Math.random()<0.5)return pick(ADDICT_BEG);
+  return d.stats.obedience<30?pick(ENTER_LOW):d.stats.obedience<65?pick(ENTER_MID):pick(ENTER_HIGH);
+}
+function getDogReactionLine(d){
+  if(d.stats.addiction>=60&&Math.random()<0.4)return pick(ADDICT_BEG);
+  return d.stats.obedience<25?pick(REACT_LOW):d.stats.obedience<55?pick(REACT_MID):pick(REACT_HIGH);
+}
+function getMasochismLine(d){
+  const m=d.stats.masochism||0;
+  return m<30?pick(MASOCHISM_LOW):m<65?pick(MASOCHISM_MID):pick(MASOCHISM_HIGH);
+}
+function getOwnedMindText(){return pick(OWNED_MIND_POOL);}
+
+function getTrainText(toolId, dog, targetPart){
+  if(dog.costume && T[dog.costume] && Math.random()<0.3) return pick(T[dog.costume]);
+  // 针对有目标部位的道具，优先使用 部位+道具 组合文本池
+  const compositeKey = targetPart ? toolId + '_' + targetPart : null;
+  if(compositeKey && T[compositeKey]) return pick(T[compositeKey]);
+  // 对于有目标部位但没有专门文本的情况，根据部位选择合适的文本
+  if(targetPart && !T[toolId]){
+    const partTextMap = {
+      nipple: T.hand_nipple,
+      cock: T.hand_cock,
+      hole: T.hand_hole,
+      pussy: T.hand_pussy
+    };
+    if(partTextMap[targetPart]) return pick(partTextMap[targetPart]);
+  }
+  const pool = T[toolId] || T.hand_nipple;
+  return pick(pool);
+}
+
+function applyEffects(dog,effects,room){
+  if(dog.costume){const ci=getShopItemById(dog.costume);if(ci?.bonus){const b=COSTUME_BONUS_MAP[ci.bonus];if(b){if(b.field==='all')Object.keys(effects).forEach(k=>{if(typeof effects[k]==='number')effects[k]=Math.ceil(effects[k]*b.mult);});else if(effects[b.field]!==undefined)effects[b.field]=Math.ceil(effects[b.field]*b.mult);}}}
+  if(room?.facilities){room.facilities.forEach(fId=>{const fi=getShopItemById(fId);if(fi?.roomBonus){if(fi.roomBonus==='all')Object.keys(effects).forEach(k=>{if(typeof effects[k]==='number')effects[k]=Math.ceil(effects[k]*1.15);});else if(effects[fi.roomBonus]!==undefined)effects[fi.roomBonus]=Math.ceil(effects[fi.roomBonus]*1.3);}});}
+  if(dog.eagleBroken)effects.obedience=Math.ceil((effects.obedience||0)*1.3);
+  Object.entries(effects).forEach(([k,v])=>{if(dog.stats[k]!==undefined&&typeof v==='number')dog.stats[k]=Math.max(0,Math.min(100,dog.stats[k]+v));});
+  updateAppearance(dog);
+}
+
+function advanceTime(min){
+  const prevDay=gameState.day;
+  gameState.minute+=min;
+  while(gameState.minute>=60){gameState.minute-=60;gameState.hour++;}
+  while(gameState.hour>=24){gameState.hour-=24;gameState.day++;}
+  const daysPassed=gameState.day-prevDay;
+  if(daysPassed>0){for(let i=0;i<daysPassed;i++)decayAllDogNeeds();}
+  else{
+    // Partial hour decay
+    const hrs=Math.floor(min/60);
+    if(hrs>0){gameState.rooms.forEach(room=>{if(room.occupied&&room.dog){room.dog.hunger=Math.max(0,room.dog.hunger-hrs*2);room.dog.thirst=Math.max(0,room.dog.thirst-hrs*3);}});}
+  }
+  checkDeathAll();
+  renderStatusBar();
+}
+
+function checkDeathAll(){
+  for(const room of gameState.rooms){
+    if(room.occupied&&room.dog){
+      if(room.dog.hunger<=0&&room.dog.thirst<=0){
+        triggerDeathEnding(room.dog.name);return;
+      }
+    }
+  }
+}
+
+function skipOneHour(){
+  gameState.rooms.forEach(room=>{
+    if(room.occupied&&room.dog){
+      room.dog.hunger=Math.max(0,room.dog.hunger-2);
+      room.dog.thirst=Math.max(0,room.dog.thirst-3);
+      processIdleEquipment(room);
+    }
+  });
+  gameState.minute+=60;
+  while(gameState.minute>=60){gameState.minute-=60;gameState.hour++;}
+  while(gameState.hour>=24){gameState.hour-=24;gameState.day++;decayAllDogNeeds();}
+  checkDeathAll();
+  renderStatusBar();
+  if(gameState.activeRoomId!==null){const room=gameState.rooms.find(r=>r.id===gameState.activeRoomId);if(room?.occupied)openTrainingPanel(room.id);}
+  renderRooms();autoSave();showToast('跳过了一小时。');
+}
+
+function decayAllDogNeeds(){
+  gameState.rooms.forEach(room=>{
+    if(room.occupied&&room.dog){
+      room.dog.hunger=Math.max(0,room.dog.hunger-15);
+      room.dog.thirst=Math.max(0,room.dog.thirst-20);
+      processIdleEquipment(room);
+    }
+  });
+}
+
+function processIdleEquipment(room){
+  if(!room.dog?.equippedItems?.length)return;
+  const dog=room.dog;
+  dog.equippedItems.forEach(eqId=>{
+    const item=getShopItemById(eqId);
+    if(item?.effect){Object.entries(item.effect).forEach(([k,[min,max]])=>{const val=randInt(Math.floor(min*0.3),Math.floor(max*0.4));if(dog.stats[k]!==undefined&&val>0)dog.stats[k]=Math.min(100,dog.stats[k]+val);});}
+    if(item?.insertable)dog.stats.addiction=Math.min(100,(dog.stats.addiction||0)+1);
+  });
+  const obe=dog.stats.obedience;
+  const pool=obe<30?IDLE_TEXTS.low:obe<65?IDLE_TEXTS.mid:IDLE_TEXTS.high;
+  if(!room.log)room.log=[];
+  room.log.push(`<span style="color:var(--text-dim);">[自动]</span> ${pick(pool)}`);
+  if(room.log.length>60)room.log=room.log.slice(-60);
+}
+
+function triggerDeathEnding(dogName){
+  const txt=[
+    `${dogName}的身体彻底停止了动弹，蜷缩在调教室角落里的姿态像一只被遗弃的人偶。`,
+    `你呆立在原地，脑袋里嗡嗡作响，走廊尽头传来的皮鞋声越来越近。`,
+    `门被踹开的声音震得墙上的道具都在晃动。`,
+    `"调教师先生，我们这还是法治社会啊。"为首的人把手铐举到灯光下，金属表面折射出冰凉的白光。`,
+    `你被按在地上，脸贴着水泥地面，手腕被冰冷的金属环扣住的触感清晰而真实。`,
+    `次日的社会版头条用了加粗的黑体字：【知名调教馆馆主涉嫌过失致人死亡 已被依法刑事拘留】。`,
+    `你的调教馆生涯，到此终结。`
+  ];
+  document.getElementById('gameoverTitle').textContent='💀 意外致死';
+  document.getElementById('gameoverTitle').style.color='var(--danger)';
+  document.getElementById('gameoverBox').className='gameover-box';
+  document.getElementById('gameoverText').innerHTML=txt.join('<br><br>');
+  document.getElementById('gameoverActions').innerHTML='<button class="btn btn-danger btn-block" onclick="restartGame()">重新开始</button>';
+  document.getElementById('gameoverOverlay').classList.add('active');
+}
+
+function checkTrueEnding(){
+  if(gameState.reputation>=100&&gameState.level>=4){
+    const txt=[
+      `传说中这座城市的暗巷深处曾有一间门锈栏歪的破旧馆子。`,
+      `如今朱漆大门上镶着烫金的五个大字在夜色中熠熠生辉。`,
+      `"天下第一馆"。`,
+      `各地的名流显贵排着长队只为求得馆主亲手调教。`,
+      `你坐在最里间的房中，手中握着那封被时间侵蚀得发黄的旧信。`,
+      `"这间馆子交给你了。"`,
+      `你将信笺放回抽屉，嘴角浮起笑意。`,
+      `"做到了，老头子。"`,
+      `窗外传来铃声，又有新的客人到访。`,
+      `你起身正了正衣领，向门口走去。`,
+      `这条路还很长，你已经站在了最高的地方。`
+    ];
+    document.getElementById('gameoverTitle').textContent='👑 真结局：天下第一馆';
+    document.getElementById('gameoverTitle').style.color='var(--accent-gold)';
+    document.getElementById('gameoverBox').className='gameover-box true-end';
+    document.getElementById('gameoverText').innerHTML=txt.join('<br><br>');
+    document.getElementById('gameoverActions').innerHTML=`<button class="btn btn-gold btn-block" style="margin-bottom:8px;" onclick="continuePlaying()">继续游玩</button><button class="btn btn-danger btn-block" onclick="restartGame()">重新开始</button>`;
+    document.getElementById('gameoverOverlay').classList.add('active');
+  }
+}
+
+function continuePlaying(){document.getElementById('gameoverOverlay').classList.remove('active');}
+
+function restartGame(){
+  gameState={started:true,day:1,hour:8,minute:0,gold:500,exp:0,level:0,reputation:5,rooms:[{id:0,occupied:false,dog:null,facilities:[],log:[]}],inventory:[],fontSize:gameState.fontSize||14,currentGuest:null,activeRoomId:null,history:gameState.history||[],apiConfig:gameState.apiConfig||{url:'',key:'',model:''},ownedDogs:[]};
+  document.getElementById('gameoverOverlay').classList.remove('active');
+  document.getElementById('completeOverlay').classList.remove('active');
+  document.getElementById('trainingPanel').classList.remove('active');
+  renderAll();autoSave();showToast('已重新开始。');
+}
+
+function confirmRestart(){if(confirm('确定要重新开始吗？'))restartGame();}
+
+function checkLevelUp(){
+  while(gameState.level<RANK_TABLE.length-1&&gameState.exp>=RANK_TABLE[gameState.level+1].expReq){gameState.level++;showToast(`🎉 晋升为 ${RANK_TABLE[gameState.level].name}！`);}
+  checkTrueEnding();
+}
+
+function init(){
+  loadAutoSave();
+  if(gameState.started){document.getElementById('introOverlay').classList.add('hidden');renderAll();}
+  else playIntro();
+}
+
+function playIntro(){
+  const introText=document.getElementById('introText');
+  const lines=['那封泛黄的信件被雨水打湿了一角，字迹模糊，只剩下最后一句依然清晰：','"这间馆子交给你了。"','','你推开那扇生锈的铁门，铰链发出沉重的哀鸣。','昏暗的走廊尽头，积灰的调教室默默等待着新主人。','','墙壁上还残留着上一任馆主留下的痕迹。皮具挂架歪斜着，几条旧鞭子蜷缩在角落。','空气中弥漫着皮革、铁锈和陈年木料的气味。','','这里曾经声名赫赫，如今只剩下一副破败的躯壳。','','<em>你并不在意。</em>','<em>毕竟所有伟大的事业，都从废墟里长出来。</em>'];
+  let i=0;introText.innerHTML='';
+  const iv=setInterval(()=>{
+    if(i<lines.length){introText.innerHTML+=(lines[i]===''?'<br>':lines[i]+'<br>');i++;introText.scrollTop=introText.scrollHeight;}
+    else{clearInterval(iv);document.getElementById('introCredit').style.display='block';document.getElementById('introBtn').style.display='block';}
+  },350);
+}
+
+function startGame(){gameState.started=true;document.getElementById('introOverlay').classList.add('hidden');renderAll();autoSave();showToast('欢迎来到你的调教馆。');}
+
+function switchPage(pid,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(pid).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(pid==='pageTraining')renderRooms();
+  if(pid==='pageInventory')renderInventory();
+  if(pid==='pageShop')renderShop();
+  if(pid==='pageSettings')renderSettings();
+  if(pid==='pageHistory')renderHistory();
+}
+
+function renderAll(){renderStatusBar();renderRooms();renderInventory();renderShop();renderSettings();renderLobby();renderHistory();document.body.style.fontSize=gameState.fontSize+'px';}
+
+function renderStatusBar(){
+  document.getElementById('dayCount').textContent=gameState.day;
+  document.getElementById('timeDisplay').textContent=formatTime();
+  document.getElementById('goldCount').textContent=gameState.gold;
+  const rank=getRank();const nr=RANK_TABLE[gameState.level+1];
+  document.getElementById('rankTitle').textContent=rank.name;
+  if(nr){const p=((gameState.exp-rank.expReq)/(nr.expReq-rank.expReq))*100;document.getElementById('expBar').style.width=Math.min(p,100)+'%';document.getElementById('expText').textContent=`${gameState.exp-rank.expReq} / ${nr.expReq-rank.expReq}`;}
+  else{document.getElementById('expBar').style.width='100%';document.getElementById('expText').textContent='MAX';}
+  document.getElementById('repBar').style.width=Math.min(gameState.reputation,100)+'%';
+  document.getElementById('repValue').textContent=gameState.reputation;
+}
+
+function renderLobby(){
+  const free=gameState.rooms.filter(r=>!r.occupied).length;
+  document.getElementById('lobbyHint').textContent=free===0?'所有调教室已满无法接单。':`当前有 ${free} 间空闲调教室。`;
+  document.getElementById('waitBtn').disabled=free===0;
+}
+
+function startWaiting(){
+  if(!gameState.rooms.find(r=>!r.occupied)){showToast('没有空闲调教室！');return;}
+  document.getElementById('waitBtn').disabled=true;
+  const p=document.getElementById('waitProgress'),f=document.getElementById('waitProgressFill');
+  document.getElementById('guestArea').innerHTML='';
+  p.classList.add('active');f.style.width='0%';
+  setTimeout(()=>f.style.width='100%',50);
+  advanceTime(60);
+  setTimeout(()=>{
+    p.classList.remove('active');f.style.width='0%';
+    if(Math.random()*100<Math.min(30+gameState.reputation*1.2,95))generateGuest(document.getElementById('guestArea'));
+    else document.getElementById('guestArea').innerHTML='<div class="card" style="text-align:center;color:var(--text-dim);padding:20px;">等了许久，无人登门。</div>';
+    document.getElementById('waitBtn').disabled=false;
+  },3100);
+}
+
+function generateGuest(container){
+  const isFuta=Math.random()<0.35;const dogName=generateName();const dogType=isFuta?'双性':'男';
+  const ownerIsFemale=Math.random()<0.5;const ownerName=pick(SURNAMES)+pick(ownerIsFemale?OWNER_F_SFX:OWNER_M_SFX);
+  const star=randInt(1,RANK_TABLE[gameState.level].maxStar);
+  const statPool=isFuta?['obedience','nipple','cock','hole','pussy','addiction','masochism','oral']:['obedience','nipple','cock','hole','addiction','masochism','oral'];
+  const shuffled=statPool.sort(()=>Math.random()-0.5);const selected=shuffled.slice(0,star);
+  const target={};selected.forEach(k=>{target[k]=Math.min(100,randInt(50+star*5,70+star*8));});
+  const reqTexts=selected.map(k=>pick(REQ_POOL[k]));
+  const vo=pick(VIRGIN_OPTS);
+  const previewExp=randInt(...STAR_EXP_RANGE[star]),previewGold=randInt(...STAR_GOLD_RANGE[star]);
+  const stats={obedience:randInt(5,15),nipple:randInt(5,12),cock:randInt(5,12),hole:randInt(5,12),addiction:0,masochism:0,oral:randInt(3,10)};
+  if(isFuta)stats.pussy=randInt(5,12);
+  const dog={name:dogName,type:dogType,height:pick(HEIGHT_POOL),build:pick(BUILD_POOL),skin:pick(SKIN_POOL),nipple:pick(NIPPLE_POOL),cock:pick(COCK_POOL),hole:pick(HOLE_POOL),pussy:isFuta?pick(PUSSY_POOL):null,stats,target,ownerName,costume:null,keepVirginity:vo.keep,hasBeenFucked:false,hunger:80,thirst:80,equippedItems:[],nippleAppearance:NIP_APP[0],cockAppearance:COCK_APP[0],holeAppearance:HOLE_APP[0],pussyAppearance:isFuta?PUSSY_APP[0]:null,addictionAppearance:ADDICT_APP[0],masochismAppearance:M_APP[0],oralAppearance:ORAL_APP[0],eagleBroken:false,eagleActive:false,eagleStart:0,eagleDuration:0,owned:false,affection:0,canMilk:false,grewPussy:false,hasGag:false};
+  gameState.currentGuest={dog,star,reqTexts,ownerName,previewExp,previewGold,virginText:vo.text};
+  const pron=ownerIsFemale?'她':'他';
+  let bd=`身高 <span>${dog.height}</span><br>体型 <span>${dog.build}</span><br>肤色 <span>${dog.skin}</span><br>乳头 <span>${dog.nipple}</span><br>鸡巴 <span>${dog.cock}</span><br>后穴 <span>${dog.hole}</span>`;
+  if(isFuta)bd+=`<br>小穴 <span>${dog.pussy}</span>`;
+  container.innerHTML=`<div class="guest-card"><h3>👤 ${ownerName} 带着一条${dogType==='双性'?'双性':'公'}狗前来</h3><div class="star-display">${'⭐'.repeat(star)} ${star}星任务</div><div class="guest-info">${pron}把锁链拴着的${dogType==='双性'?'双性人':'男人'}推到你面前，上下打量了一眼，嘴角带着轻蔑的笑。<br><br>"新收的狗，叫 <span>${dogName}</span>。"${pron}拽了拽锁链，${dogName}踉跄着往前撞了两步。<br><br>${bd}</div><div class="requirement-box"><div class="requirement-title">📋 主人的要求 (${star}项)</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">${reqTexts.map(t=>`"${t}"`).join('<br>')}</div><div style="margin-top:8px;font-size:11px;color:var(--text-dim);">目标：${Object.entries(target).map(([k,v])=>`${statLabel(k)}≥${v}`).join(' | ')}</div></div><div class="requirement-box" style="border-color:rgba(212,168,67,0.3);background:rgba(212,168,67,0.05);"><div class="requirement-title" style="color:var(--accent-gold);">🔒 关于第一次</div><div style="font-size:13px;color:var(--text-secondary);">${pron}说："${vo.text}"</div><div style="margin-top:4px;font-size:11px;color:${vo.keep?'var(--danger)':'var(--success)'};">${vo.keep?'⚠️ 禁止性交只能用道具':'✅ 可以进行性交'}</div></div><div class="reward-preview">📦 完成奖励：💰${previewGold} | ⚡${previewExp} | ⭐+1</div><div class="guest-actions"><button class="btn btn-success" onclick="acceptGuest()">✅ 接单</button><button class="btn btn-danger" onclick="rejectGuest()">❌ 拒绝</button></div></div>`;
+}
+
+function acceptGuest(){
+  if(!gameState.currentGuest)return;const fr=gameState.rooms.find(r=>!r.occupied);if(!fr){showToast('无空闲调教室！');return;}
+  fr.occupied=true;fr.dog={...gameState.currentGuest.dog};fr.dog._previewExp=gameState.currentGuest.previewExp;fr.dog._previewGold=gameState.currentGuest.previewGold;fr.dog._star=gameState.currentGuest.star;fr.dog._actions=[];fr.log=[];
+  gameState.currentGuest=null;
+  document.getElementById('guestArea').innerHTML='<div class="card" style="text-align:center;color:var(--success);padding:16px;">✅ 已接单。</div>';
+  renderRooms();renderLobby();autoSave();
+}
+
+function rejectGuest(){gameState.currentGuest=null;document.getElementById('guestArea').innerHTML='<div class="card" style="text-align:center;color:var(--text-dim);padding:16px;">已婉拒。</div>';}
+
+function renderRooms(){
+  const g=document.getElementById('roomGrid');g.innerHTML='';
+  gameState.rooms.forEach((room,idx)=>{
+    const div=document.createElement('div');div.className=`room-card ${room.occupied?'occupied':'empty'}`;
+    if(room.occupied&&room.dog){
+      const d=room.dog;const keys=getStatKeysForDog(d);
+      div.innerHTML=`<div class="room-status occupied">${d.owned?'永久':'调教中'}</div><div class="dog-name">🐕 ${d.name} (${d.type}${d.grewPussy?' → 双性':''}) ${d._star?'⭐'.repeat(d._star):''}</div>
+        <div class="needs-bar-container"><div class="needs-row"><span style="color:var(--text-dim);">🍖</span><div class="needs-bar"><div class="needs-fill-hunger" style="width:${d.hunger}%"></div></div><span style="font-size:10px;">${d.hunger}</span></div><div class="needs-row"><span style="color:var(--text-dim);">💧</span><div class="needs-bar"><div class="needs-fill-thirst" style="width:${d.thirst}%"></div></div><span style="font-size:10px;">${d.thirst}</span></div></div>
+        <div class="stat-grid">${keys.map(k=>renderStat(statLabel(k),d.stats[k],d.target[k])).join('')}</div>
+        ${d.eagleActive?'<div style="font-size:11px;color:var(--danger);margin:4px 0;">🦅 熬鹰进行中...</div>':''}
+        ${d.costume?`<div style="font-size:11px;color:var(--accent-gold);">👗 ${getItemById(d.costume)?.name}</div>`:''}
+        ${d.equippedItems?.length?`<div class="equipped-items">🔧 ${d.equippedItems.map(e=>getItemById(e)?.name).join('、')}</div>`:''}
+        ${d.canMilk?'<div style="font-size:11px;color:#e8a;">🥛 可产奶</div>':''}
+        <div style="margin-top:8px;display:flex;gap:6px;"><button class="btn btn-primary btn-sm" style="flex:1;" onclick="openTrainingPanel(${room.id})">进入调教</button>${d.owned?'':`<button class="btn btn-danger btn-sm" onclick="releaseDog(${room.id})">释放</button>`}</div>`;
+    }else{
+      div.innerHTML=`<div class="room-status free">空闲</div><div style="text-align:center;padding:20px;color:var(--text-dim);"><div style="font-size:28px;margin-bottom:6px;">🔓</div>调教室 ${idx+1}${room.facilities?.length?`<br><span style="font-size:11px;color:var(--accent-gold);">设施：${room.facilities.map(f=>getItemById(f)?.name).join('、')}</span>`:''}</div>`;
+    }
+    g.appendChild(div);
+  });
+  document.getElementById('buildCostHint').textContent=`下一间费用：${300+(gameState.rooms.length-1)*250} 金币`;
+}
+
+function renderStat(label,cur,tgt){
+  const p=Math.min(cur||0,100);const c=p>=70?'high':p>=40?'mid':'low';const ok=tgt&&cur>=tgt;
+  return `<div class="stat-item"><div><span class="label">${label}</span> <span class="value ${ok?'achieved':''}">${cur||0}${tgt?'/'+tgt:''} ${ok?'✓':''}</span></div><div class="sensitivity-bar"><div class="sensitivity-fill ${c}" style="width:${p}%"></div></div></div>`;
+}
+
+function buildRoom(){
+  const cost=300+(gameState.rooms.length-1)*250;
+  if(gameState.gold<cost){showToast('金币不足！');return;}
+  gameState.gold-=cost;gameState.rooms.push({id:gameState.rooms.length,occupied:false,dog:null,facilities:[],log:[]});
+  renderRooms();renderStatusBar();renderLobby();autoSave();showToast(`新调教室建成！花费 ${cost}。`);
+}
+
+function releaseDog(rid){
+  const room=gameState.rooms.find(r=>r.id===rid);if(!room?.occupied)return;
+  if(room.dog.owned){showToast('已买下的狗不能释放！');return;}
+  if(room.dog.equippedItems)room.dog.equippedItems.forEach(e=>gameState.inventory.push({id:e}));
+  room.occupied=false;room.dog=null;room.log=[];
+  if(gameState.activeRoomId===rid){document.getElementById('trainingPanel').classList.remove('active');gameState.activeRoomId=null;}
+  renderRooms();renderLobby();renderInventory();autoSave();
+}
+
+function openTrainingPanel(rid){
+  const room=gameState.rooms.find(r=>r.id===rid);if(!room?.occupied)return;
+  gameState.activeRoomId=rid;document.getElementById('trainingPanel').classList.add('active');
+  const d=room.dog;updateAppearance(d);
+
+  if(d.eagleActive){
+    const elapsed=((gameState.day-1)*24+gameState.hour)-(d.eagleStart||0);
+    if(elapsed>=d.eagleDuration){
+      const triggered=Math.random()<(0.15+d.eagleDuration*0.04);
+      if(triggered){
+        d.eagleActive=false;
+        const begLine=pick(EAGLE_BEG);
+        if(!room.log)room.log=[];
+        room.log.push(`<span style="color:var(--danger);">[熬鹰结束]</span> ${d.name}终于发出了求饶的声音：`);
+        room.log.push(`<span class="dialogue">${begLine}</span>`);
+        document.getElementById('eagleContent').innerHTML=`<p>${d.name} 在黑暗中发出了求饶：</p><p style="color:var(--accent-gold);font-style:italic;">${begLine}</p><p>要停止熬鹰吗？停止也视为成功驯服。</p>`;
+        document.getElementById('eagleActions').innerHTML=`<button class="btn btn-success btn-sm" onclick="finishEagle(true)">停止（驯服）</button><button class="btn btn-danger btn-sm" onclick="finishEagle(false)">继续关着</button>`;
+        document.getElementById('eagleModal').classList.add('active');
+      } else {
+        d.eagleActive=false;
+        if(!room.log)room.log=[];
+        room.log.push(`<span style="color:var(--text-dim);">[熬鹰结束]</span> ${d.name}在黑暗中沉默着，未触发求饶。`);
+      }
+    } else {
+      if(!room.log)room.log=[];
+      const eagleTexts=['被关在密闭空间中的'+d.name+'发出微弱的喘息声，铁门另一侧传来断断续续的指甲抓挠声。','黑暗中'+d.name+'蜷缩着身体，偶尔传出压抑的抽泣声和铁链拖动地面的摩擦声。','隔着铁门能听到'+d.name+'的牙齿在发抖中磕碰作响，饥渴和恐惧正在瓦解最后的意志防线。'];
+      room.log.push(`<span style="color:var(--danger);">[熬鹰中]</span> ${pick(eagleTexts)}`);
+    }
+  }
+
+  document.getElementById('tpTitle').innerHTML=`🎯 ${d.owned?'💖 ':''}${d.name} (${d.type}${d.grewPussy?' → 双性':''})`;
+
+  document.getElementById('tpNeeds').innerHTML=`<div class="needs-bar-container" style="margin-bottom:8px;"><div class="needs-row"><span>🍖</span><div class="needs-bar"><div class="needs-fill-hunger" style="width:${d.hunger}%"></div></div><span style="font-size:10px;">${d.hunger}</span></div><div class="needs-row"><span>💧</span><div class="needs-bar"><div class="needs-fill-thirst" style="width:${d.thirst}%"></div></div><span style="font-size:10px;">${d.thirst}</span></div></div>`;
+
+  const keys=getStatKeysForDog(d);
+  let tgt='<div style="font-size:12px;color:var(--accent-gold);margin-bottom:6px;font-weight:700;">调教目标 & 外观</div>';
+  keys.forEach(k=>{
+    const cur=d.stats[k]||0;const tv=d.target[k];const ok=tv&&cur>=tv;
+    let app='';
+    if(k==='nipple')app=d.nippleAppearance;else if(k==='cock')app=d.cockAppearance;else if(k==='hole')app=d.holeAppearance;else if(k==='pussy')app=d.pussyAppearance||'';else if(k==='addiction')app=d.addictionAppearance;else if(k==='masochism')app=d.masochismAppearance;else if(k==='oral')app=d.oralAppearance;
+    tgt+=`<div class="target-row"><span>${statLabel(k)}</span><span class="current">${cur}</span><span>→</span><span class="${ok?'achieved':'goal'}">${tv||'--'} ${ok?'✅':''}</span></div>`;
+    if(app)tgt+=`<div style="font-size:10px;color:var(--text-dim);margin-bottom:4px;padding-left:8px;">外观：${app}</div>`;
+  });
+  if(d.keepVirginity)tgt+=`<div style="font-size:11px;color:var(--danger);margin-top:6px;">⚠️ 禁止性交 ${d.hasBeenFucked?'（⛔ 已违反）':''}</div>`;
+  if(d.eagleBroken)tgt+=`<div style="font-size:11px;color:var(--success);margin-top:4px;">🕊️ 已驯服，不再反抗</div>`;
+  if(d.eagleActive)tgt+=`<div style="font-size:11px;color:var(--danger);margin-top:4px;">🦅 熬鹰进行中</div>`;
+  if(d.owned){
+    tgt+=`<div style="font-size:11px;color:#e8a;margin-top:4px;">💖 好感度：${d.affection||0}</div>`;
+    tgt+=`<div class="mind-text">${getOwnedMindText()}</div>`;
+  }
+  document.getElementById('tpTargets').innerHTML=tgt;
+
+  document.getElementById('tpEquipped').innerHTML=d.equippedItems?.length?`<div style="font-size:11px;color:var(--text-dim);">🔧 ${d.equippedItems.map(e=>`<span style="color:var(--accent-red);">${getItemById(e)?.name}</span> <button class="btn btn-sm btn-secondary" style="padding:2px 6px;font-size:10px;" onclick="unequipItem(${rid},'${e}')">卸下</button>`).join(' ')}</div>`:'';
+
+  const facEl=document.getElementById('tpFacilities');
+  facEl.innerHTML=room.facilities?.length?'<div style="font-size:11px;color:var(--accent-gold);margin-bottom:4px;">🏗️ 设施：</div>'+room.facilities.map(fId=>{const fi=getItemById(fId);return fi?.usable?`<button class="btn btn-sm btn-secondary" style="margin:2px;" onclick="useFacility(${rid},'${fId}')">${fi.icon} ${fi.name}</button>`:`<span style="font-size:11px;">${fi?.icon} ${fi?.name}</span>`;}).join(' '):'';
+
+  if(!room._enterShown){if(!room.log)room.log=[];room.log.push(`<span class="dialogue">${getDogEnterLine(d)}</span>`);room._enterShown=true;}
+
+  // Show milk button if can milk
+  document.getElementById('drinkMilkBtn').style.display=d.canMilk?'inline-flex':'none';
+
+  renderToolGrid(room);renderTrainingLog(room);
+}
+
+function renderToolGrid(room){
+  const el=document.getElementById('tpTools');el.innerHTML='';const d=room.dog;
+  addTB(el,'🤚','徒手',()=>openHandChoice());
+  const allEq=[];gameState.rooms.forEach(r=>{if(r.occupied&&r.dog?.equippedItems)r.dog.equippedItems.forEach(e=>allEq.push(e));});
+  const invC={},eqC={};
+  gameState.inventory.forEach(inv=>{const it=getShopItemById(inv.id);if(it&&(it.effect||it.insertable||it.consumeOnUse||it.drugType))invC[inv.id]=(invC[inv.id]||0)+1;});
+  allEq.forEach(id=>{eqC[id]=(eqC[id]||0)+1;});
+  Object.keys(invC).forEach(tid=>{
+    const cat=getShopCategory(tid);
+    if(cat==='drugs'){
+      const item=getShopItemById(tid);
+      addTB(el,item.icon,item.name,()=>useDrug(room.id,tid));
+      return;
+    }
+    if(cat==='consumables')return;
+    if(cat==='costumes')return;
+    if(cat==='facility')return;
+    if((invC[tid]||0)-(eqC[tid]||0)<=0)return;
+    const item=getShopItemById(tid);
+    if(item.consumeOnUse){
+      addTB(el,item.icon,item.name,()=>doTraining(room.id,tid,null));
+    } else if(item.needsTarget){
+      addTB(el,item.icon,item.name,()=>openInsertChoice(room.id,tid));
+    } else {
+      addTB(el,item.icon,item.name,()=>doTraining(room.id,tid,null));
+    }
+    if(item.insertable)addTB(el,'📌','装配'+item.name,()=>equipItem(room.id,tid));
+  });
+  const cSeen=new Set();
+  gameState.inventory.filter(inv=>getShopCategory(inv.id)==='costumes').forEach(inv=>{
+    if(cSeen.has(inv.id))return;cSeen.add(inv.id);
+    const item=getShopItemById(inv.id);
+    if(item.requiresMilk&&!d.canMilk)return;
+    const w=d.costume===inv.id;
+    const b=addTB(el,item.icon,`${w?'脱下':'换上'}${item.name}`,()=>{
+      d.costume=w?null:inv.id;
+      if(!w&&T[inv.id]){if(!room.log)room.log=[];room.log.push(pick(T[inv.id]));}
+      openTrainingPanel(room.id);autoSave();
+    });
+    if(w)b.style.borderColor='var(--accent-gold)';
+  });
+}
+
+function addTB(c,icon,label,fn){const b=document.createElement('button');b.className='tool-btn';b.innerHTML=`<span class="tool-icon">${icon}</span>${label}`;b.onclick=fn;c.appendChild(b);return b;}
+
+function openHandChoice(){
+  const room=gameState.rooms.find(r=>r.id===gameState.activeRoomId);if(!room?.occupied)return;
+  const d=room.dog;
+  let acts=`<button class="btn btn-primary btn-sm" onclick="closeHandModal();doTraining(${room.id},'hand_nipple',null)">🫧 把玩乳头</button>
+    <button class="btn btn-primary btn-sm" onclick="closeHandModal();doTraining(${room.id},'hand_cock',null)">🍆 把玩鸡巴</button>
+    <button class="btn btn-primary btn-sm" onclick="closeHandModal();doTraining(${room.id},'hand_hole',null)">🍑 把玩后穴</button>`;
+  if(d.type==='双性'||d.grewPussy)acts+=`<button class="btn btn-primary btn-sm" onclick="closeHandModal();doTraining(${room.id},'hand_pussy',null)">🌸 把玩小穴</button>`;
+  acts+=`<button class="btn btn-secondary btn-sm" onclick="closeHandModal()">取消</button>`;
+  document.getElementById('handModalActions').innerHTML=acts;
+  document.getElementById('handModal').classList.add('active');
+}
+function closeHandModal(){document.getElementById('handModal').classList.remove('active');}
+
+function openInsertChoice(rid,toolId){
+  const room=gameState.rooms.find(r=>r.id===rid);if(!room?.occupied)return;
+  const d=room.dog;const item=getShopItemById(toolId);
+  let desc=`选择使用 ${item.name} 的部位：`;
+  let acts=`<button class="btn btn-primary btn-sm" onclick="closeInsertModal();doTraining(${rid},'${toolId}','hole')">🍑 后穴</button>`;
+  if(d.type==='双性'||d.grewPussy)acts+=`<button class="btn btn-primary btn-sm" onclick="closeInsertModal();doTraining(${rid},'${toolId}','pussy')">🌸 小穴</button>`;
+  if(item.effect?.nipple)acts+=`<button class="btn btn-primary btn-sm" onclick="closeInsertModal();doTraining(${rid},'${toolId}','nipple')">🫧 乳头</button>`;
+  if(item.effect?.cock)acts+=`<button class="btn btn-primary btn-sm" onclick="closeInsertModal();doTraining(${rid},'${toolId}','cock')">🍆 鸡巴</button>`;
+  acts+=`<button class="btn btn-secondary btn-sm" onclick="closeInsertModal()">取消</button>`;
+  document.getElementById('insertModalDesc').textContent=desc;
+  document.getElementById('insertModalActions').innerHTML=acts;
+  document.getElementById('insertModal').classList.add('active');
+}
+function closeInsertModal(){document.getElementById('insertModal').classList.remove('active');}
+
+function useDrug(rid,drugId){
+  const room=gameState.rooms.find(r=>r.id===rid);if(!room?.occupied)return;
+  const dog=room.dog;const item=getShopItemById(drugId);if(!item)return;
+  const idx=gameState.inventory.findIndex(i=>i.id===drugId);if(idx===-1){showToast('没有该药品！');return;}
+  if(item.drugType==='milk_male'&&dog.type==='双性'){showToast('该药品仅限男性使用。');return;}
+  if(item.drugType==='milk_futa'&&dog.type!=='双性'&&!dog.grewPussy){showToast('该药品仅限双性使用。');return;}
+  if(item.drugType==='grow_pussy'&&(dog.type==='双性'||dog.grewPussy)){showToast('该对象已有女性器官。');return;}
+  if(item.drugType==='grow_pussy'&&dog.type!=='男'){showToast('该药品仅限男性使用。');return;}
+  gameState.inventory.splice(idx,1);
+  if(!room.log)room.log=[];
+  if(item.drugType==='milk_male'||item.drugType==='milk_futa'){
+    dog.canMilk=true;
+    room.log.push(`将产奶药强行灌入了 ${dog.name} 的嘴里。药效很快开始发作，${dog.name}的胸部开始微微胀痛，乳腺在药物的作用下迅速发育，乳头变得更加突出肿胀，挤压时已经能看到清澈的液体从乳孔中渗出。`);
+    room.log.push(`<span class="dialogue">"胸口……好胀……怎么回事……你给我灌了什么……！"</span>`);
+  } else if(item.drugType==='grow_pussy'){
+    dog.grewPussy=true;dog.stats.pussy=randInt(5,12);dog.pussy=pick(PUSSY_POOL);dog.pussyAppearance=PUSSY_APP[0];
+    room.log.push(`将长逼药灌入了 ${dog.name} 的嘴里。药效猛烈而迅速，${dog.name}的下体开始剧烈地痉挛扭动，鸡巴的根部下方，会阴的位置开始出现一条逐渐裂开的缝隙，粉嫩的花瓣从裂缝中慢慢绽放出来形成了一个完整的女性器官。`);
+    room.log.push(`<span class="dialogue">"啊啊啊！！下面……下面裂开了……不……长出来了什么……！？"</span>`);
+  }
+  if(!dog._actions)dog._actions=[];dog._actions.push({action:'drug_'+drugId,time:formatTime(),day:gameState.day});
+  advanceTime(15);renderTrainingLog(room);openTrainingPanel(rid);renderRooms();renderInventory();autoSave();
+}
+
+function drinkMilk(){
+  const room=gameState.rooms.find(r=>r.id===gameState.activeRoomId);if(!room?.occupied)return;
+  const dog=room.dog;if(!dog.canMilk){showToast('该对象无法产奶。');return;}
+  if(!room.log)room.log=[];
+  room.log.push(`俯下身含住${dog.name}肿胀的乳头用力吸吮，温热的奶水从乳孔中涌入口腔，甜腻带着淡淡腥味的乳汁在舌面上蔓延开来，乳头在吸吮中被拉伸到极限变得更加红肿敏感，${dog.name}的身体在泌乳的刺激下不停颤抖着发出压抑的呻吟。`);
+  room.log.push(`<span class="dialogue">${dog.stats.obedience>50?'"主人……喝吧……奶水都是主人的……♡"':'"不……不要吸……那里……啊……！"'}</span>`);
+  let effects={};getStatKeysForDog(dog).forEach(k=>effects[k]=0);
+  effects.nipple=randInt(4,8);
+  if(dog.owned)dog.affection=Math.min(100,(dog.affection||0)+2);
+  applyEffects(dog,effects,room);
+  if(!dog._actions)dog._actions=[];dog._actions.push({action:'drink_milk',time:formatTime(),day:gameState.day});
+  advanceTime(15);renderTrainingLog(room);openTrainingPanel(room.id);renderRooms();autoSave();
+}
+
+function doTraining(rid,toolId,targetPart){
+  const room=gameState.rooms.find(r=>r.id===rid);if(!room?.occupied)return;
+  const dog=room.dog;
+  let effects={};
+  getStatKeysForDog(dog).forEach(k=>effects[k]=0);
+
+  // Consume item if consumeOnUse
+  const item=getShopItemById(toolId);
+  if(item?.consumeOnUse){
+    const idx=gameState.inventory.findIndex(i=>i.id===toolId);
+    if(idx===-1){showToast('没有该道具！');return;}
+    gameState.inventory.splice(idx,1);
+  }
+
+  if(toolId.startsWith('hand_')){
+    const part=toolId.replace('hand_','');
+    if(dog.stats.obedience<25&&!dog.eagleBroken)effects.obedience=-randInt(1,3);
+    effects[part]=(effects[part]||0)+randInt(3,6);
+  } else if(toolId==='whip'){
+    if(item.effect)Object.entries(item.effect).forEach(([k,[min,max]])=>{effects[k]=(effects[k]||0)+randInt(min,max);});
+    if(dog.stats.obedience<20&&!dog.eagleBroken)effects.obedience=(effects.obedience||0)-randInt(1,2);
+  } else if(toolId==='aphrodisiac'){
+    if(item.effect)Object.entries(item.effect).forEach(([k,[min,max]])=>{effects[k]=(effects[k]||0)+randInt(min,max);});
+  } else {
+    if(item?.effect)Object.entries(item.effect).forEach(([k,[min,max]])=>{effects[k]=(effects[k]||0)+randInt(min,max);});
+    if(targetPart==='hole')effects.hole=(effects.hole||0)+randInt(4,8);
+    else if(targetPart==='pussy'&&dog.stats.pussy!==undefined)effects.pussy=(effects.pussy||0)+randInt(4,8);
+    else if(targetPart==='nipple')effects.nipple=(effects.nipple||0)+randInt(3,6);
+    else if(targetPart==='cock')effects.cock=(effects.cock||0)+randInt(3,6);
+    if(item?.insertable){effects.addiction=(effects.addiction||0)+1;}
+    if(dog.stats.obedience<20&&!dog.eagleBroken)effects.obedience=(effects.obedience||0)-randInt(1,2);
+  }
+
+  // Gag check for ball_gag / ring_gag
+  if(toolId==='ring_gag'||toolId==='ball_gag'){dog.hasGag=toolId;}
+
+  applyEffects(dog,effects,room);
+
+  if(!room.log)room.log=[];
+  const txt=getTrainText(toolId,dog,targetPart);
+  room.log.push(txt);
+  if(toolId==='whip')room.log.push(`<span class="dialogue">${getMasochismLine(dog)}</span>`);
+  else if(toolId==='aphrodisiac')room.log.push(`<span class="dialogue">${dog.stats.obedience>40?'"身体……好热……求你……给我……♡"':'"你……给我灌了什么……混蛋……啊……身体……不对劲……"'}</span>`);
+  else if(toolId==='ball_gag')room.log.push(`<span class="dialogue">"唔唔……嗯唔……！"（口球堵住了所有语言，只剩下含混的鼻音）</span>`);
+  else if(toolId==='ring_gag')room.log.push(`<span class="dialogue">"啊……唔……"（嘴巴被撑开无法闭合，口水不停往外流）</span>`);
+  else if(toolId==='enema')room.log.push(`<span class="dialogue">${dog.stats.obedience>50?'"肚子……好胀……要满了……主人……呜……"':'"住手！你往里面灌什么……啊……肚子要炸了……！"'}</span>`);
+  else if(toolId==='milker')room.log.push(`<span class="dialogue">${dog.canMilk?(dog.stats.obedience>50?'"嗯啊……又在吸了……奶水……停不下来……♡"':'"不要吸了……乳头要被拽断了……呜……"'):(dog.stats.obedience>40?'"只是被吸……什么都没出来……好丢人……"':'"疼……乳头要被吸掉了……放开……！"')}</span>`);
+  else if(toolId==='nipple_clamp')room.log.push(`<span class="dialogue">${dog.stats.obedience>55?'"啊……夹住了……好紧……呜♡……"':'"痛！拿开……呜啊……乳头要被夹坏了……！"'}</span>`);
+  else if(toolId==='cock_ring')room.log.push(`<span class="dialogue">${dog.stats.obedience>55?'"好紧……下面要爆了……不能射……呜♡……"':'"松开……呜……要憋死了……求你松开……！"'}</span>`);
+  else if(toolId==='candle')room.log.push(`<span class="dialogue">${dog.stats.obedience>50?'"烫……啊……可是……好奇怪……怕又想要……"':'"烫！烫烫烫！住手！别再滴了……！"'}</span>`);
+  else if(toolId==='blindfold')room.log.push(`<span class="dialogue">${dog.stats.obedience>50?'"看不见……什么都看不见……好害怕……主人你在哪……"':'"把这东西摘掉！我什么都看不到……放开我……！"'}</span>`);
+  else if(toolId==='urethral')room.log.push(`<span class="dialogue">${dog.stats.obedience>50?'"里面……从里面被……啊啊……要疯了……"':'"不……不要往那里面插……求求你……那里不行……！"'}</span>`);
+  else if(toolId==='fleshlight')room.log.push(`<span class="dialogue">${dog.stats.obedience>50?'"里面……好紧……好舒服……不要停……♡"':'"啊……那是什么……不要套上去……唔……"'}</span>`);
+  else if(toolId==='plug')room.log.push(`<span class="dialogue">${dog.stats.obedience>50?'"嗯……塞进来了……好满……♡"':'"太粗了……进不去……呜……屁股要裂开了……！"'}</span>`);
+  else room.log.push(`<span class="dialogue">${getDogReactionLine(dog)}</span>`);
+  if(room.log.length>60)room.log=room.log.slice(-60);
+
+  if(!dog._actions)dog._actions=[];
+  dog._actions.push({action:toolId,target:targetPart,time:formatTime(),day:gameState.day});
+
+  dog.hunger=Math.max(0,dog.hunger-randInt(2,5));dog.thirst=Math.max(0,dog.thirst-randInt(3,6));
+  if(dog.owned)dog.affection=Math.min(100,(dog.affection||0)+1);
+
+  advanceTime(randInt(20,45));
+  checkDeathAll();
+  renderTrainingLog(room);openTrainingPanel(rid);renderRooms();renderInventory();autoSave();
+}
+
+function useFacility(rid,fid){
+  const room=gameState.rooms.find(r=>r.id===rid);if(!room?.occupied)return;
+  const dog=room.dog;const item=getShopItemById(fid);if(!item)return;
+  let effects={};getStatKeysForDog(dog).forEach(k=>effects[k]=0);
+  if(item.useEffect)Object.entries(item.useEffect).forEach(([k,[min,max]])=>{effects[k]=(effects[k]||0)+randInt(min,max);});
+  applyEffects(dog,effects,room);
+  if(!room.log)room.log=[];
+  if(T[fid])room.log.push(pick(T[fid]));
+  room.log.push(`<span class="dialogue">${getDogReactionLine(dog)}</span>`);
+  if(room.log.length>60)room.log=room.log.slice(-60);
+  if(!dog._actions)dog._actions=[];dog._actions.push({action:'facility_'+fid,time:formatTime(),day:gameState.day});
+  dog.hunger=Math.max(0,dog.hunger-randInt(3,6));dog.thirst=Math.max(0,dog.thirst-randInt(3,6));
+  advanceTime(randInt(25,45));
+  checkDeathAll();
+  renderTrainingLog(room);openTrainingPanel(rid);renderRooms();autoSave();
+}
+
+function equipItem(rid,toolId){
+  const room=gameState.rooms.find(r=>r.id===rid);if(!room?.dog)return;
+  if(!room.dog.equippedItems)room.dog.equippedItems=[];
+  const allEq=[];gameState.rooms.forEach(r=>{if(r.occupied&&r.dog?.equippedItems)r.dog.equippedItems.forEach(e=>allEq.push(e));});
+  if(gameState.inventory.filter(i=>i.id===toolId).length-allEq.filter(e=>e===toolId).length<=0){showToast('没有多余的该道具！');return;}
+  room.dog.equippedItems.push(toolId);
+  if(!room.log)room.log=[];room.log.push(`将 ${getItemById(toolId)?.name} 装配在了 ${room.dog.name} 身上。`);
+  room.log.push(`<span class="dialogue">${getDogReactionLine(room.dog)}</span>`);
+  if(getShopItemById(toolId)?.insertable)room.dog.stats.addiction=Math.min(100,(room.dog.stats.addiction||0)+1);
+  if(!room.dog._actions)room.dog._actions=[];room.dog._actions.push({action:'equip_'+toolId,time:formatTime(),day:gameState.day});
+  openTrainingPanel(rid);autoSave();
+}
+
+function unequipItem(rid,toolId){
+  const room=gameState.rooms.find(r=>r.id===rid);if(!room?.dog)return;
+  const idx=room.dog.equippedItems.indexOf(toolId);
+  if(idx!==-1){room.dog.equippedItems.splice(idx,1);if(!room.log)room.log=[];room.log.push(`卸下了 ${getItemById(toolId)?.name}。`);openTrainingPanel(rid);autoSave();}
+}
+
+function openSexChoice(){
+  if(gameState.activeRoomId===null)return;const room=gameState.rooms.find(r=>r.id===gameState.activeRoomId);if(!room?.occupied)return;
+  const d=room.dog;
+  let acts=`<button class="btn btn-primary btn-sm" onclick="closeSexModal();doSex('hole')">🍑 后穴</button>`;
+  if(d.type==='双性'||d.grewPussy)acts+=`<button class="btn btn-primary btn-sm" onclick="closeSexModal();doSex('pussy')">🌸 小穴</button>`;
+  else acts+=`<button class="btn btn-sm" disabled style="opacity:0.3;">🌸 小穴（非双性）</button>`;
+  acts+=`<button class="btn btn-secondary btn-sm" onclick="closeSexModal()">取消</button>`;
+  document.getElementById('sexModalDesc').textContent=`选择插入 ${d.name} 的部位：`;
+  document.getElementById('sexModalActions').innerHTML=acts;
+  document.getElementById('sexModal').classList.add('active');
+}
+function closeSexModal(){document.getElementById('sexModal').classList.remove('active');}
+
+function doSex(part){
+  const room=gameState.rooms.find(r=>r.id===gameState.activeRoomId);if(!room?.occupied)return;
+  const dog=room.dog;dog.hasBeenFucked=true;
+  let effects={};getStatKeysForDog(dog).forEach(k=>effects[k]=0);
+  effects.addiction=2;
+  if(part==='hole'){effects.hole=randInt(5,10);effects.obedience=dog.stats.obedience<30&&!dog.eagleBroken?-randInt(2,5):randInt(3,6);effects.nipple=randInt(1,3);effects.cock=randInt(2,5);}
+  else{effects.pussy=randInt(5,10);effects.obedience=dog.stats.obedience<30&&!dog.eagleBroken?-randInt(2,5):randInt(3,6);effects.nipple=randInt(1,3);effects.cock=randInt(2,4);}
+  if(dog.stats.addiction>=40)effects.obedience+=randInt(2,5);
+  applyEffects(dog,effects,room);
+  if(!room.log)room.log=[];
+  const sexTexts=part==='hole'?T.sex_hole:T.sex_pussy;
+  room.log.push(pick(sexTexts));
+  const sexLine=dog.stats.obedience>55?pick(SEX_LINES_ENJOY):(part==='hole'?pick(SEX_LINES_HOLE):pick(SEX_LINES_PUSSY));
+  room.log.push(`<span class="dialogue">${sexLine}</span>`);
+  if(room.log.length>60)room.log=room.log.slice(-60);
+  if(!dog._actions)dog._actions=[];dog._actions.push({action:'sex_'+part,time:formatTime(),day:gameState.day});
+  dog.hunger=Math.max(0,dog.hunger-randInt(3,6));dog.thirst=Math.max(0,dog.thirst-randInt(4,8));
+  if(dog.owned)dog.affection=Math.min(100,(dog.affection||0)+2);
+  advanceTime(randInt(30,60));
+  checkDeathAll();
+  renderTrainingLog(room);openTrainingPanel(room.id);renderRooms();autoSave();
+}
+
+const SEX_LINES_HOLE=['"不……不要插进来……啊！"','"太大了……进不去……呜啊！"','"被填满了……好深……"','"要被操坏了……呜呜……"','"里面……好热……♡"','"每次都顶到最里面……"'];
+const SEX_LINES_PUSSY=['"那里不行……啊！"','"小穴……被撑开了……呜！"','"不要那么深……子宫要被顶到了……"','"花穴……被搅得一塌糊涂了……"'];
+const SEX_LINES_ENJOY=['"啊♡……好棒……再用力♡……"','"主人的……好大……要融化了♡……"','"嗯嗯♡……被操得好舒服……♡"','"里面又在绞紧了……想要更多♡……"'];
+
+function openOralChoice(){
+  if(gameState.activeRoomId===null)return;const room=gameState.rooms.find(r=>r.id===gameState.activeRoomId);if(!room?.occupied)return;
+  const d=room.dog;
+  const hasGag=d.hasGag==='ring_gag';
+  const lowObe=d.stats.obedience<30&&!d.eagleBroken;
+  let desc='';
+  if(lowObe&&!hasGag){desc=`${d.name}的服从度太低，强行让其口交可能会被咬。使用口枷可以避免。`;}
+  else if(hasGag){desc=`${d.name}的嘴巴已经被口枷撑开，可以直接使用。`;}
+  else{desc=`让 ${d.name} 为你口交。`;}
+  let acts=`<button class="btn btn-primary btn-sm" onclick="closeOralModal();doOral()">👄 开始口交</button>`;
+  acts+=`<button class="btn btn-secondary btn-sm" onclick="closeOralModal()">取消</button>`;
+  document.getElementById('oralModalDesc').textContent=desc;
+  document.getElementById('oralModalActions').innerHTML=acts;
+  document.getElementById('oralModal').classList.add('active');
+}
+function closeOralModal(){document.getElementById('oralModal').classList.remove('active');}
+
+function doOral(){
+  const room=gameState.rooms.find(r=>r.id===gameState.activeRoomId);if(!room?.occupied)return;
+  const dog=room.dog;
+  const hasGag=dog.hasGag==='ring_gag';
+  const lowObe=dog.stats.obedience<30&&!dog.eagleBroken;
+  let effects={};getStatKeysForDog(dog).forEach(k=>effects[k]=0);
+  effects.oral=randInt(4,8);
+  effects.obedience=randInt(2,5);
+
+  if(!room.log)room.log=[];
+
+  if(lowObe&&!hasGag){
+    // Bite scenario
+    room.log.push(pick(ORAL_LOW));
+    room.log.push(`<span class="dialogue">"呸！我咬死你！"</span>`);
+    effects.obedience=-randInt(3,6);
+  } else if(hasGag){
+    // Forced with gag
+    room.log.push(pick(ORAL_GAG));
+    room.log.push(pick(ORAL_FORCE));
+    // Cum in throat = increase thirst
+    room.log.push(pick(ORAL_CUM));
+    dog.thirst=Math.min(100,dog.thirst+15);
+    effects.oral+=randInt(2,4);
+    effects.addiction+=1;
+  } else if(dog.stats.obedience>=60){
+    // Willing
+    room.log.push(pick(ORAL_HIGH));
+    room.log.push(`<span class="dialogue">${dog.stats.obedience>75?'"主人的味道……好喜欢……♡ 还想要更多……"':'"嗯……我会好好含着的……"'}</span>`);
+    effects.oral+=randInt(2,4);
+  } else {
+    // Mid
+    room.log.push(pick(ORAL_MID));
+    room.log.push(`<span class="dialogue">"唔……好大……嘴巴快合不上了……"</span>`);
+  }
+
+  if(room.log.length>60)room.log=room.log.slice(-60);
+  applyEffects(dog,effects,room);
+  if(!dog._actions)dog._actions=[];dog._actions.push({action:'oral'+(hasGag?'_gagged':''),time:formatTime(),day:gameState.day});
+  dog.hunger=Math.max(0,dog.hunger-randInt(2,4));dog.thirst=Math.max(0,dog.thirst-randInt(2,4));
+  if(dog.owned)dog.affection=Math.min(100,(dog.affection||0)+1);
+  advanceTime(randInt(20,40));
+  checkDeathAll();
+  renderTrainingLog(room);openTrainingPanel(room.id);renderRooms();autoSave();
+}
+
+function startEagle(){
+  if(gameState.activeRoomId===null)return;
+  const room=gameState.rooms.find(r=>r.id===gameState.activeRoomId);if(!room?.occupied)return;
+  const dog=room.dog;
+  if(dog.eagleBroken){showToast(`${dog.name}已经被驯服了。`);return;}
+  if(dog.eagleActive){showToast(`${dog.name}正在熬鹰中。`);return;}
+  document.getElementById('eagleContent').innerHTML=`<p>将 ${dog.name} 关入密闭空间进行熬鹰。</p><p>选择时长（期间可离开做其他事）：</p>`;
+  document.getElementById('eagleActions').innerHTML=`
+    <button class="btn btn-secondary btn-sm" onclick="doEagle(4)">4小时</button>
+    <button class="btn btn-secondary btn-sm" onclick="doEagle(8)">8小时</button>
+    <button class="btn btn-danger btn-sm" onclick="doEagle(16)">16小时</button>
+    <button class="btn btn-secondary btn-sm" onclick="closeEagle()">取消</button>`;
+  document.getElementById('eagleModal').classList.add('active');
+}
+
+function closeEagle(){document.getElementById('eagleModal').classList.remove('active');}
+
+function doEagle(hours){
+  const room=gameState.rooms.find(r=>r.id===gameState.activeRoomId);if(!room?.occupied)return;
+  const dog=room.dog;
+  dog.eagleActive=true;
+  dog.eagleStart=(gameState.day-1)*24+gameState.hour;
+  dog.eagleDuration=hours;
+  if(!room.log)room.log=[];
+  room.log.push(`将 ${dog.name} 关入密闭空间开始熬鹰，预计${hours}小时。`);
+  if(!dog._actions)dog._actions=[];dog._actions.push({action:'eagle_'+hours+'h',time:formatTime(),day:gameState.day});
+  closeEagle();
+  openTrainingPanel(room.id);renderRooms();autoSave();
+  showToast(`熬鹰已开始，${hours}小时后再来查看。`);
+}
+
+function finishEagle(stop){
+  const room=gameState.rooms.find(r=>r.id===gameState.activeRoomId);if(!room?.occupied)return;
+  const dog=room.dog;
+  if(stop){
+    dog.eagleBroken=true;dog.eagleActive=false;
+    dog.stats.obedience=Math.min(100,(dog.stats.obedience||0)+randInt(15,25));
+    if(!room.log)room.log=[];room.log.push(`${dog.name}被放出来时浑身发抖，眼神中满是畏惧和顺从。此后再也不敢反抗。`);
+    showToast(`${dog.name} 已被驯服！`);
+  } else {
+    dog.hunger=Math.max(0,dog.hunger-10);dog.thirst=Math.max(0,dog.thirst-12);
+    dog.eagleActive=true;dog.eagleStart=(gameState.day-1)*24+gameState.hour;dog.eagleDuration=4;
+    if(!room.log)room.log=[];room.log.push(`无视了求饶，继续将 ${dog.name} 关在黑暗中。`);
+  }
+  closeEagle();
+  if(room.log.length>60)room.log=room.log.slice(-60);
+  checkDeathAll();
+  renderTrainingLog(room);openTrainingPanel(room.id);renderRooms();autoSave();
+}
+
+function feedDog(type){
+  if(gameState.activeRoomId===null)return;const room=gameState.rooms.find(r=>r.id===gameState.activeRoomId);if(!room?.occupied)return;
+  const items=gameState.inventory.filter(inv=>{const it=getShopItemById(inv.id);return it?.feedType===type;});
+  if(!items.length){showToast(type==='food'?'没有食物了！':'没有水了！');return;}
+  const use=items[0];const data=getShopItemById(use.id);
+  gameState.inventory.splice(gameState.inventory.findIndex(i=>i.id===use.id),1);
+  const dog=room.dog;
+  if(type==='food')dog.hunger=Math.min(100,dog.hunger+(data.feedAmount||30));
+  else dog.thirst=Math.min(100,dog.thirst+(data.feedAmount||30));
+  if(!room.log)room.log=[];room.log.push(`投喂了 ${data.name}。${dog.name} ${dog.stats.obedience>40||dog.eagleBroken?'乖乖地吃了下去。':'起初抗拒，最终咽了下去。'}`);
+  if(!dog._actions)dog._actions=[];dog._actions.push({action:'feed_'+type,time:formatTime(),day:gameState.day});
+  advanceTime(10);renderTrainingLog(room);openTrainingPanel(room.id);renderInventory();autoSave();
+}
+
+function renderTrainingLog(room){
+  const el=document.getElementById('tpLog');
+  if(!room.log?.length){el.innerHTML='<p style="color:var(--text-dim);">尚无记录...</p>';return;}
+  el.innerHTML=room.log.map(l=>`<p>${l}</p>`).join('');el.scrollTop=el.scrollHeight;
+}
+
+function closeTrainingPanel(){
+  const room=gameState.rooms.find(r=>r.id===gameState.activeRoomId);if(room)room._enterShown=false;
+  document.getElementById('trainingPanel').classList.remove('active');gameState.activeRoomId=null;
+}
+
+function tryCompleteTraining(){
+  if(gameState.activeRoomId===null)return;const room=gameState.rooms.find(r=>r.id===gameState.activeRoomId);if(!room?.occupied)return;
+  const dog=room.dog;if(dog.owned){showToast('已买下的狗无需交付。');return;}
+  let allMet=true;Object.entries(dog.target).forEach(([k,v])=>{if((dog.stats[k]||0)<v)allMet=false;});
+  const violated=dog.keepVirginity&&dog.hasBeenFucked;
+  const histEntry={name:dog.name,type:dog.type,star:dog._star,ownerName:dog.ownerName,target:{...dog.target},finalStats:{...dog.stats},success:allMet&&!violated,actions:dog._actions||[],date:`第${gameState.day}天`};
+  if(!gameState.history)gameState.history=[];gameState.history.push(histEntry);
+
+  if(!allMet||violated){
+    gameState.reputation=Math.max(0,gameState.reputation-5);
+    if(dog.equippedItems)dog.equippedItems.forEach(e=>gameState.inventory.push({id:e}));
+    room.occupied=false;room.dog=null;room.log=[];closeTrainingPanel();
+    renderRooms();renderStatusBar();renderLobby();renderInventory();autoSave();
+    document.getElementById('completeTitle').textContent='💢 调教失败';
+    document.getElementById('completeRewards').innerHTML=`${violated?'主人发现你违反了规矩，勃然大怒。':'目标未达成，主人非常不满。'}<br><br>"${dog.ownerName}" 怒气冲冲地带走了 ${dog.name}。<br><br>⭐ 声望 <span style="color:var(--danger);">-5</span>`;
+    document.getElementById('completeOverlay').classList.add('active');return;
+  }
+  const gold=dog._previewGold||100,exp=dog._previewExp||10;
+  gameState.gold+=gold;gameState.exp+=exp;gameState.reputation=Math.min(100,gameState.reputation+1);checkLevelUp();
+  if(dog.equippedItems)dog.equippedItems.forEach(e=>gameState.inventory.push({id:e}));
+  room.occupied=false;room.dog=null;room.log=[];closeTrainingPanel();
+  renderRooms();renderStatusBar();renderLobby();renderInventory();autoSave();
+  document.getElementById('completeTitle').textContent='✨ 调教完成';
+  document.getElementById('completeRewards').innerHTML=`主人非常满意。<br><br>💰 +<span>${gold}</span><br>⚡ +<span>${exp}</span><br>⭐ +<span>1</span>`;
+  document.getElementById('completeOverlay').classList.add('active');
+}
+
+function closeComplete(){document.getElementById('completeOverlay').classList.remove('active');}
+
+function openBuyModal(){
+  if(gameState.activeRoomId===null)return;const room=gameState.rooms.find(r=>r.id===gameState.activeRoomId);if(!room?.occupied)return;
+  const dog=room.dog;if(dog.owned){showToast('已经是你的了！');return;}
+  const cost=(dog._previewGold||100)*10;
+  document.getElementById('buyModalDesc').innerHTML=`花费 <span style="color:var(--accent-gold);font-weight:700;">${cost} 金币</span> 买下 ${dog.name}？<br><br>买下后将永远占据一个调教室，增加好感度属性，成为你的专属。任务视为放弃（不扣声望）。`;
+  document.getElementById('buyModalActions').innerHTML=`<button class="btn btn-gold btn-sm" onclick="buyDog(${cost})">💖 买下</button><button class="btn btn-secondary btn-sm" onclick="closeBuyModal()">取消</button>`;
+  document.getElementById('buyModal').classList.add('active');
+}
+function closeBuyModal(){document.getElementById('buyModal').classList.remove('active');}
+function buyDog(cost){
+  if(gameState.gold<cost){showToast('金币不足！');closeBuyModal();return;}
+  const room=gameState.rooms.find(r=>r.id===gameState.activeRoomId);if(!room?.occupied)return;
+  gameState.gold-=cost;room.dog.owned=true;room.dog.affection=0;room.dog.target={};
+  if(!room.log)room.log=[];room.log.push(`你买下了 ${room.dog.name}。从此，${room.dog.name}归你所有。`);
+  room.log.push(`<span class="dialogue">"主人……从今以后我就是你的了……请好好疼爱我♡"</span>`);
+  closeBuyModal();openTrainingPanel(room.id);renderRooms();renderStatusBar();autoSave();
+  showToast(`${room.dog.name} 已成为你的专属！`);
+}
+
+function renderInventory(){
+  const g=document.getElementById('inventoryGrid');g.innerHTML='';
+  if(!gameState.inventory.length){document.getElementById('invEmpty').style.display='block';return;}
+  document.getElementById('invEmpty').style.display='none';
+  const merged={};gameState.inventory.forEach(inv=>{if(!merged[inv.id])merged[inv.id]={...inv,count:0};merged[inv.id].count++;});
+  Object.values(merged).forEach(inv=>{
+    const item=getShopItemById(inv.id);if(!item)return;
+    const s=document.createElement('div');s.className='inv-slot';
+    s.innerHTML=`<span style="font-size:24px;">${item.icon}</span><span class="inv-name">${item.name}</span>${inv.count>1?`<span class="inv-count">${inv.count}</span>`:''}`;
+    s.onclick=()=>showItemDetail(inv.id);g.appendChild(s);
+  });
+}
+
+function showItemDetail(id){
+  const item=getShopItemById(id);if(!item)return;const count=gameState.inventory.filter(i=>i.id===id).length;
+  const sp=Math.floor(item.price/2);const isFac=getShopCategory(id)==='facility';
+  document.getElementById('modalTitle').innerHTML=`${item.icon} ${item.name}${count>1?` ×${count}`:''}`;
+  document.getElementById('modalDesc').textContent=item.desc;
+  let a='';if(isFac)a+=`<button class="btn btn-primary btn-sm" onclick="openFacilityInstall('${id}')">安装</button>`;
+  a+=`<button class="btn btn-gold btn-sm" onclick="sellItem('${id}')">出售(${sp}💰)</button><button class="btn btn-danger btn-sm" onclick="discardItem('${id}')">丢弃</button><button class="btn btn-secondary btn-sm" onclick="closeModal()">关闭</button>`;
+  document.getElementById('modalActions').innerHTML=a;document.getElementById('itemModal').classList.add('active');
+}
+
+function openFacilityInstall(id){
+  closeModal();
+  const item=getShopItemById(id);
+  let desc=`选择要将 ${item.name} 安装到哪间调教室：`;
+  let acts='';
+  gameState.rooms.forEach((room,idx)=>{
+    const alreadyHas=room.facilities?.includes(id);
+    acts+=`<button class="btn btn-sm ${alreadyHas?'btn-secondary':'btn-primary'}" ${alreadyHas?'disabled':''} onclick="doFacilityInstall('${id}',${room.id})">调教室 ${idx+1}${alreadyHas?' (已安装)':''}</button>`;
+  });
+  acts+=`<button class="btn btn-secondary btn-sm" onclick="closeFacilityInstall()">取消</button>`;
+  document.getElementById('facilityInstallDesc').textContent=desc;
+  document.getElementById('facilityInstallActions').innerHTML=acts;
+  document.getElementById('facilityInstallModal').classList.add('active');
+}
+function closeFacilityInstall(){document.getElementById('facilityInstallModal').classList.remove('active');}
+function doFacilityInstall(id,roomId){
+  const room=gameState.rooms.find(r=>r.id===roomId);if(!room)return;
+  if(!room.facilities)room.facilities=[];
+  if(room.facilities.includes(id)){showToast('该调教室已安装此设施！');return;}
+  room.facilities.push(id);
+  const i=gameState.inventory.findIndex(x=>x.id===id);if(i!==-1)gameState.inventory.splice(i,1);
+  closeFacilityInstall();renderInventory();renderRooms();autoSave();showToast(`已安装到调教室 ${roomId+1}。`);
+}
+
+function sellItem(id){const i=gameState.inventory.findIndex(x=>x.id===id);if(i===-1)return;const it=getShopItemById(id);gameState.inventory.splice(i,1);gameState.gold+=Math.floor(it.price/2);renderInventory();renderStatusBar();closeModal();autoSave();}
+function discardItem(id){const i=gameState.inventory.findIndex(x=>x.id===id);if(i===-1)return;gameState.inventory.splice(i,1);renderInventory();closeModal();autoSave();}
+function closeModal(){document.getElementById('itemModal').classList.remove('active');}
+
+let currentShopTab='tools';
+function renderShop(){
+  const te=document.getElementById('shopTabs');te.innerHTML='';
+  [{key:'tools',label:'🔧道具'},{key:'costumes',label:'👗服装'},{key:'facility',label:'🏗️设施'},{key:'consumables',label:'🍖消耗品'},{key:'drugs',label:'💊特殊药'}].forEach(tab=>{
+    const b=document.createElement('button');b.className=`shop-tab ${currentShopTab===tab.key?'active':''}`;b.textContent=tab.label;b.onclick=()=>{currentShopTab=tab.key;renderShop();};te.appendChild(b);
+  });
+  const le=document.getElementById('shopList');le.innerHTML='';
+  (SHOP_ITEMS[currentShopTab]||[]).forEach(item=>{
+    const d=document.createElement('div');d.className='shop-item';
+    let extra='';
+    if(item.bonus)extra=`<div style="font-size:10px;color:var(--accent-gold);">${COSTUME_BONUS_MAP[item.bonus]?.label||''}</div>`;
+    if(item.roomBonus)extra=`<div style="font-size:10px;color:var(--accent-gold);">加成：${item.roomBonus==='all'?'全属性':statLabel(item.roomBonus)}${item.usable?' | 可使用':''}</div>`;
+    if(item.feedType)extra=`<div style="font-size:10px;color:var(--accent-gold);">恢复${item.feedType==='food'?'饱食':'饥渴'}度 +${item.feedAmount}</div>`;
+    if(item.drugType)extra=`<div style="font-size:10px;color:var(--accent-gold);">${item.drugType==='milk_male'?'男性产奶':item.drugType==='milk_futa'?'双性产奶':'男性长逼'}</div>`;
+    if(item.consumeOnUse)extra+=`<div style="font-size:10px;color:var(--danger);">消耗品</div>`;
+    if(item.requiresMilk)extra+=`<div style="font-size:10px;color:var(--danger);">需要产奶能力</div>`;
+    d.innerHTML=`<div class="shop-item-icon">${item.icon}</div><div class="shop-item-info"><div class="shop-item-name">${item.name}</div><div class="shop-item-desc">${item.desc.substring(0,50)}...</div>${extra}</div><div style="text-align:right;"><div class="shop-item-price">💰${item.price}</div><button class="btn btn-primary btn-sm" style="margin-top:4px;" onclick="buyItem('${item.id}')">购买</button></div>`;
+    le.appendChild(d);
+  });
+}
+function buyItem(id){const it=getShopItemById(id);if(!it)return;if(gameState.gold<it.price){showToast('金币不足！');return;}gameState.gold-=it.price;gameState.inventory.push({id});renderStatusBar();renderInventory();autoSave();showToast(`购买了 ${it.name}！`);}
+
+function renderHistory(){
+  const el=document.getElementById('historyList');
+  if(!gameState.history?.length){el.innerHTML='<p style="color:var(--text-dim);font-size:12px;">尚无历史记录。</p>';return;}
+  el.innerHTML=gameState.history.map((h,i)=>`<div class="history-entry" onclick="openHistoryDetail(${i})">
+    <div class="he-name">${h.name} (${h.type}) ${'⭐'.repeat(h.star||1)}</div>
+    <div class="he-info">${h.date} · 主人：${h.ownerName}</div>
+    <div class="he-status ${h.success?'he-success':'he-fail'}">${h.success?'✅ 成功':'❌ 失败'}</div>
+  </div>`).reverse().join('');
+}
+
+function openHistoryDetail(idx){
+  const h=gameState.history[idx];if(!h)return;
+  const keys=h.type==='双性'?['obedience','nipple','cock','hole','pussy','addiction','masochism','oral']:['obedience','nipple','cock','hole','addiction','masochism','oral'];
+  let statsHtml=keys.map(k=>`<div style="font-size:11px;">${statLabel(k)}: ${h.finalStats[k]||0}${h.target[k]?'/'+h.target[k]:''} ${h.target[k]&&(h.finalStats[k]||0)>=h.target[k]?'✅':''}</div>`).join('');
+  let actionsHtml=h.actions?.length?h.actions.map(a=>`<div style="font-size:10px;color:var(--text-dim);">第${a.day}天 ${a.time} - ${a.action}${a.target?' ('+a.target+')':''}</div>`).join(''):'<div style="font-size:10px;color:var(--text-dim);">无操作记录</div>';
+
+  document.getElementById('historyDetailContent').innerHTML=`
+    <div class="modal-title">${h.name} (${h.type}) ${'⭐'.repeat(h.star||1)}</div>
+    <div class="modal-desc">
+      <div>主人：${h.ownerName} · ${h.date}</div>
+      <div class="he-status ${h.success?'he-success':'he-fail'}" style="margin:6px 0;">${h.success?'✅ 调教成功':'❌ 调教失败'}</div>
+      <div style="margin:8px 0;font-weight:700;color:var(--accent-gold);">最终属性</div>
+      ${statsHtml}
+      <div style="margin:8px 0;font-weight:700;color:var(--accent-gold);">操作记录</div>
+      <div style="max-height:120px;overflow-y:auto;">${actionsHtml}</div>
+    </div>
+    <div id="generatedStoryArea"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-sm" onclick="generateStory(${idx})">📝 生成剧情</button>
+      <button class="btn btn-secondary btn-sm" onclick="closeHistoryDetail()">关闭</button>
+    </div>`;
+  document.getElementById('historyDetailModal').classList.add('active');
+}
+
+function closeHistoryDetail(){document.getElementById('historyDetailModal').classList.remove('active');}
+
+async function generateStory(idx){
+  const h=gameState.history[idx];if(!h)return;
+  const cfg=gameState.apiConfig;
+  if(!cfg?.url||!cfg?.key||!cfg?.model){showToast('请先在设置中配置API！');return;}
+  const area=document.getElementById('generatedStoryArea');
+  area.innerHTML='<p style="color:var(--accent-gold);text-align:center;">生成中...</p>';
+
+  const actionDesc=h.actions?.map(a=>`第${a.day}天${a.time}进行了${a.action}${a.target?'('+a.target+')':''}`).join('；')||'无特殊操作';
+  const prompt=`你是一个色情小说作家。请根据以下调教记录，生成一段详细的第二人称色情调教叙事文本。用"你"指代调教师（用户），被调教者名为${h.name}，是${h.type}。\n\n调教过程中的操作：${actionDesc}\n\n最终属性：${Object.entries(h.finalStats).map(([k,v])=>statLabel(k)+':'+v).join('，')}\n\n调教结果：${h.success?'成功':'失败'}\n\n要求：生成至少800字的详细色情叙事，包含具体的身体描写、动作描写、对话。用户为绝对攻方。文风露骨直白。`;
+
+  try{
+    const resp=await fetch(cfg.url+'/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+cfg.key},
+      body:JSON.stringify({model:cfg.model,messages:[{role:'user',content:prompt}],max_tokens:2000,temperature:0.9})
+    });
+    const data=await resp.json();
+    const text=data.choices?.[0]?.message?.content||'生成失败。';
+    area.innerHTML=`<div class="generated-story">${text.replace(/\n/g,'<br>')}</div>
+      <button class="btn btn-gold btn-sm btn-block" style="margin-top:8px;" onclick="exportStory(this)">📥 导出长截图</button>`;
+  }catch(e){
+    area.innerHTML=`<p style="color:var(--danger);">生成失败：${e.message}</p>`;
+  }
+}
+
+function exportStory(btn){
+  const storyEl=btn.previousElementSibling;if(!storyEl)return;
+  const text=storyEl.innerText;
+  const canvas=document.createElement('canvas');
+  const ctx=canvas.getContext('2d');
+  const fontSize=14;const lineHeight=fontSize*1.8;const padding=40;const maxWidth=600;
+  ctx.font=fontSize+'px "Noto Sans SC", sans-serif';
+  const lines=[];const paragraphs=text.split('\n');
+  paragraphs.forEach(p=>{
+    if(p.trim()===''){lines.push('');return;}
+    let line='';
+    for(let i=0;i<p.length;i++){
+      const testLine=line+p[i];
+      if(ctx.measureText(testLine).width>maxWidth-padding*2){lines.push(line);line=p[i];}
+      else line=testLine;
+    }
+    if(line)lines.push(line);
+  });
+  canvas.width=maxWidth;canvas.height=lines.length*lineHeight+padding*2;
+  ctx.fillStyle='#1a1018';ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.font=fontSize+'px "Noto Sans SC", sans-serif';ctx.fillStyle='#e8d8e0';
+  lines.forEach((line,i)=>{ctx.fillText(line,padding,padding+i*lineHeight+fontSize);});
+  canvas.toBlob(blob=>{
+    const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='调教剧情.png';a.click();URL.revokeObjectURL(url);
+  });
+  showToast('截图已生成并下载！');
+}
+
+function renderSettings(){
+  document.getElementById('fontSizeDisplay').textContent=gameState.fontSize;
+  renderSaveSlots();
+  if(gameState.apiConfig){
+    document.getElementById('apiUrl').value=gameState.apiConfig.url||'';
+    document.getElementById('apiKey').value=gameState.apiConfig.key||'';
+    document.getElementById('apiStatus').textContent=gameState.apiConfig.model?`已选择模型：${gameState.apiConfig.model}`:'未连接';
+  }
+}
+
+function changeFontSize(d){gameState.fontSize=Math.max(10,Math.min(22,gameState.fontSize+d));document.body.style.fontSize=gameState.fontSize+'px';document.getElementById('fontSizeDisplay').textContent=gameState.fontSize;autoSave();}
+
+function saveApiConfig(){
+  if(!gameState.apiConfig)gameState.apiConfig={};
+  gameState.apiConfig.url=document.getElementById('apiUrl').value.replace(/\/$/,'');
+  gameState.apiConfig.key=document.getElementById('apiKey').value;
+  autoSave();showToast('API配置已保存。');
+}
+
+async function connectApi(){
+  const url=document.getElementById('apiUrl').value.replace(/\/$/,'');
+  const key=document.getElementById('apiKey').value;
+  if(!url||!key){showToast('请填写URL和密钥！');return;}
+  try{
+    const resp=await fetch(url+'/models',{headers:{'Authorization':'Bearer '+key}});
+    const data=await resp.json();
+    const models=data.data||[];
+    const sel=document.getElementById('apiModelSelect');
+    sel.innerHTML=models.map(m=>`<option value="${m.id}">${m.id}</option>`).join('');
+    document.getElementById('apiStatus').textContent=`已获取 ${models.length} 个模型`;
+    showToast(`成功获取 ${models.length} 个模型！`);
+  }catch(e){
+    document.getElementById('apiStatus').textContent='连接失败：'+e.message;
+    showToast('连接失败！');
+  }
+}
+
+function saveSelectedModel(){
+  const model=document.getElementById('apiModelSelect').value;
+  if(!model){showToast('请先选择模型！');return;}
+  if(!gameState.apiConfig)gameState.apiConfig={};
+  gameState.apiConfig.model=model;
+  document.getElementById('apiStatus').textContent=`已选择模型：${model}`;
+  autoSave();showToast(`已选择模型：${model}`);
+}
+
+function renderSaveSlots(){
+  const c=document.getElementById('saveSlots');c.innerHTML='';
+  for(let i=0;i<MAX_SAVE_SLOTS;i++){
+    const d=localStorage.getItem(`training_save_${i}`);const div=document.createElement('div');div.className='save-slot';
+    if(d){let p;try{p=JSON.parse(d);}catch(e){p=null;}
+      div.innerHTML=`<div class="save-slot-info"><div class="slot-name">存档${i+1} · 第${p?.day||'?'}天 · ${p?.level!==undefined?RANK_TABLE[p.level]?.name:'?'}</div><div class="slot-time">${p?._saveTime||'未知'}</div></div><div class="save-actions"><button class="btn btn-gold btn-sm" onclick="saveToSlot(${i})">覆盖</button><button class="btn btn-primary btn-sm" onclick="loadSave(${i})">读取</button><button class="btn btn-danger btn-sm" onclick="deleteSave(${i})">删除</button></div>`;
+    }else{
+      div.innerHTML=`<div class="save-slot-info"><div class="slot-name" style="color:var(--text-dim);">存档${i+1} · 空</div></div><div class="save-actions"><button class="btn btn-gold btn-sm" onclick="saveToSlot(${i})">保存</button></div>`;
+    }
+    c.appendChild(div);
+  }
+}
+
+function saveToSlot(s){localStorage.setItem(`training_save_${s}`,JSON.stringify({...gameState,_saveTime:new Date().toLocaleString()}));renderSaveSlots();showToast(`已保存到存档${s+1}。`);}
+function loadSave(s){const d=localStorage.getItem(`training_save_${s}`);if(!d)return;try{const p=JSON.parse(d);delete p._saveTime;gameState=p;gameState.started=true;document.getElementById('introOverlay').classList.add('hidden');document.getElementById('gameoverOverlay').classList.remove('active');document.getElementById('completeOverlay').classList.remove('active');document.getElementById('trainingPanel').classList.remove('active');renderAll();showToast(`已读取存档${s+1}。`);}catch(e){showToast('存档损坏！');}}
+function deleteSave(s){localStorage.removeItem(`training_save_${s}`);renderSaveSlots();showToast(`存档${s+1}已删除。`);}
+function autoSave(){localStorage.setItem('training_autosave',JSON.stringify(gameState));}
+function loadAutoSave(){const d=localStorage.getItem('training_autosave');if(d){try{gameState=JSON.parse(d);}catch(e){}}}
+
+init();
+</script>
+</body>
+</html>
