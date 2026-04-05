@@ -288,20 +288,8 @@
 
   <div class="page" id="pageTraining"><div class="card"><div class="card-title">🔒 调教室</div><div class="room-grid" id="roomGrid"></div><button class="btn btn-gold btn-block" style="margin-top:12px;" onclick="buildRoom()">🔨 新建调教室</button><p style="font-size:11px;color:var(--text-dim);margin-top:6px;text-align:center;" id="buildCostHint"></p></div>
     <div class="training-panel" id="trainingPanel"><div class="card"><div class="card-title" id="tpTitle"></div><div id="tpNeeds"></div><div class="target-section" id="tpTargets"></div><div id="tpEquipped"></div><div id="tpFacilities"></div><div class="tool-grid" id="tpTools"></div><div class="training-log" id="tpLog"><p style="color:var(--text-dim);">尚无操作记录...</p></div>
-      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
-        <button class="btn btn-secondary btn-sm" onclick="closeTrainingPanel()">返回</button>
-        <button class="btn btn-gold btn-sm" onclick="feedDog('food')">🍖投喂</button>
-        <button class="btn btn-gold btn-sm" onclick="feedDog('water')">💧喂水</button>
-        <button class="btn btn-primary btn-sm" onclick="openSexChoice()">🔞性交</button>
-        <button class="btn btn-primary btn-sm" onclick="openOralChoice()">👄口交</button>
-        <button class="btn btn-secondary btn-sm" onclick="startEagle()">🦅熬鹰</button>
-        <button class="btn btn-success btn-sm" onclick="tryCompleteTraining()">完成调教</button>
-      </div>
-      <div style="margin-top:6px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
-        <button class="btn btn-sm" style="background:#5a2a6a;color:#e8d8e0;font-size:11px;" onclick="openBuyModal()">💖买下</button>
-        <span class="buy-hint" onclick="showToast('太喜欢这条狗了？花钱买下来吧，从此归你所有。费用为任务报酬的十倍。')">?</span>
-        <button class="btn btn-sm btn-secondary" id="drinkMilkBtn" style="display:none;" onclick="drinkMilk()">🥛吸奶</button>
-      </div>
+      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;" id="tpActionButtons"></div>
+      <div style="margin-top:6px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;" id="tpExtraButtons"></div>
     </div></div>
   </div>
 
@@ -315,10 +303,14 @@
     <div class="card"><div class="card-title">💾 存档管理</div><div id="saveSlots"></div></div>
     <div class="card"><div class="card-title">🔌 API 连接</div>
       <div style="font-size:12px;color:var(--text-dim);margin-bottom:8px;">连接外部大语言模型API，用于在历史战绩中生成调教剧情。</div>
+      <div id="savedApiList" style="margin-bottom:8px;"></div>
+      <input class="api-input" id="apiConfigName" placeholder="配置名称（如：我的API）">
       <input class="api-input" id="apiUrl" placeholder="API URL (如 https://api.openai.com/v1)">
       <input class="api-input" id="apiKey" placeholder="API Key / 密钥" type="password">
-      <button class="btn btn-gold btn-sm btn-block" style="margin:6px 0;" onclick="saveApiConfig()">保存配置</button>
-      <button class="btn btn-primary btn-sm btn-block" onclick="connectApi()">连接并获取模型</button>
+      <div style="display:flex;gap:6px;margin:6px 0;">
+        <button class="btn btn-gold btn-sm" style="flex:1;" onclick="saveApiConfig()">保存配置</button>
+        <button class="btn btn-primary btn-sm" style="flex:1;" onclick="connectApi()">连接</button>
+      </div>
       <select class="api-select" id="apiModelSelect"><option value="">请先连接API</option></select>
       <button class="btn btn-secondary btn-sm btn-block" style="margin-top:4px;" onclick="saveSelectedModel()">确认选择模型</button>
       <p style="font-size:11px;color:var(--text-dim);margin-top:4px;" id="apiStatus">未连接</p>
@@ -414,6 +406,100 @@ const OWNED_MIND_POOL=[
   '（主人的味道……好想闻……好想靠近……♡）',
   '（乳头被揉过的地方还在发热……那种酥麻的感觉挥之不去……）',
 ];
+
+const OWNED_MIND_LOW=[
+  '（……又被关在这里了。什么时候能出去。）',
+  '（那个人……还没来。无所谓，又不想见到那张脸。）',
+  '（身体好冷……毯子也没有……）',
+  '（肚子饿了……什么时候才喂食……）',
+  '（讨厌这个地方。讨厌那个人。讨厌一切。）',
+  '（锁链好紧……手腕都磨破了……）',
+];
+const OWNED_MIND_MID=[
+  '（那个人今天还没来呢……不是在意啦，只是习惯了被折腾而已。）',
+  '（身体有点热……不知道为什么……才不是因为想起了昨天的事。）',
+  '（说起来，被摸的时候其实也没那么讨厌……才怪。）',
+  '（好无聊啊……主人快来……不对，我在想什么。）',
+  '（锁链的声音都听习惯了……这算是适应了吗。）',
+  '（那个人笑起来的时候……其实还行吧……呸。）',
+];
+const OWNED_MIND_HIGH=[
+  '（怎么还不来……身体好热……那里痒得受不了……）',
+  '（主人什么时候回来……好想被抱……好想被摸……）',
+  '（乳头又硬了……想被主人的手指捏着揉……♡）',
+  '（下面那个洞一直在收缩……好想被填满……）',
+  '（好想吃主人的鸡巴……含在嘴里的感觉……♡）',
+  '（又在想那种事了……越来越离不开主人了……）',
+  '（鸡巴自己硬了……没有主人碰都这样……好丢人……）',
+  '（主人……快来……穴里面好空……受不了了……♡）',
+  '（越来越喜欢主人了……♡）',
+  '（屁股里好空……想要主人的鸡巴……想要被灌满……）',
+  '（又湿了……明明什么都没做……光是想到主人就……）',
+  '（主人的味道……好想闻……好想靠近……♡）',
+  '（乳头被揉过的地方还在发热……那种酥麻的感觉挥之不去……）',
+];
+
+const RETURN_DOG_LINES=[
+  '门被推开的时候你愣了一下。站在门口的不是新客人，而是一张熟悉的面孔。',
+  '"好久不见……主人。"低着头站在门口，指尖不安地攥着衣角，"我……我攒够钱了。"',
+  '"这次是我自己来的。"抬起头看着你，眼睛里带着某种说不清的光，"我想……再被你调教一次。"',
+  '"上次离开之后……身体一直忘不掉。"声音小到几乎听不到，耳尖却红透了，"所以我自己来了。"',
+  '"不要误会！我只是……只是觉得上次没做够而已。"嘴上这么说着，身体已经不自觉地向你靠近了半步。',
+];
+
+const RETURN_DOG_LEAVE=[
+  '"时间到了啊……"恋恋不舍地从调教台上爬起来，腿还在微微发抖，"下次……下次我攒够钱会再来的。"',
+  '"我走了……"走到门口回过头看了你一眼，目光在你身上停留了很久，"等我。"',
+  '"谢谢你……主人。"在门口停下脚步轻声说了一句，然后快步离开，耳朵红得滴血。',
+  '"那个……"在门口犹豫了半天，最终还是没说出口想说的话，咬着嘴唇跑掉了。',
+];
+
+const FEED_MILK_TEXTS={
+  low:'"这什么……恶心……我不喝！"猛地转过头去拒绝，白色的液体沾在嘴角被愤怒地擦掉。',
+  mid_low:'"唔……是奶吗……"勉强接过来小口小口地喝了下去，表情写满了复杂。',
+  mid:'"给我喝的？……嗯。"接过去不说话地喝完了，喉结上下滚动着。',
+  high:'"谢谢主人♡ 奶好香甜……"乖乖张嘴接住灌入的奶水，白色液体从嘴角溢出一些滑过下巴。',
+};
+
+const FEED_SEMEN_TEXTS={
+  low_resist:'"这是什么……你让我喝这种东西？！疯了吧！"拼命扭头拒绝，紧咬着牙关不肯张嘴。',
+  high_ob_high_add:'"主人的味道……♡ 我喜欢……"主动伸出舌头接住瓶口流下来的黏稠液体，吞咽的时候喉咙发出满足的咕嘟声。',
+  high_add_low_ob:'"呜……明明好恶心……可是身体好渴……"脸上写满厌恶和挣扎，嘴巴却不受控制地张开把那些黏腻的液体全部吞了下去，吞完后整个人缩成一团发抖。',
+  high_ob:'"……嗯。"没有多说什么，接过去闭着眼睛喝了下去，咽完之后嘴角留下了一道白色的痕迹。',
+};
+
+const BREAST_DRUG_TEXT='丰胸药的药效剧烈而迅速，胸部在几分钟内明显膨胀隆起，原本平坦的胸膛鼓起了柔软的弧度，乳腺在药物刺激下急速发育，乳房从无到有变成了手掌大小的饱满弧线，乳头也跟着变大变深沉，胸前多出来的重量让呼吸都变得不太一样了。';
+
+const ACHIEVEMENTS_DEF=[
+  {id:'first_blood',name:'第一桶金',desc:'完成第一个订单。',hidden_text:'恭喜你踏入了这个不归路。从此以后你的双手再也洗不干净了。',check:null,reward:200},
+  {id:'first_fail',name:'马失前蹄',desc:'第一次任务失败。',hidden_text:'失败是成功之母？在这行里，失败只会让你的声望像你的道德底线一样越来越低。',check:null,reward:200},
+  {id:'ten_streak',name:'十连胜',desc:'连续十个调教成功。',hidden_text:'十个人被你调教得服服帖帖。你妈知道你这么有出息吗？',check:null,reward:200},
+  {id:'hundred_wins',name:'百战不殆',desc:'成功调教一百个。',hidden_text:'一百条狗从你手里毕业了。你应该去教育部申请个学位授予权。',check:null,reward:200},
+  {id:'all_achievements',name:'全成就',desc:'达成其他所有成就。',hidden_text:'你真的把所有成就都解锁了。你对这个游戏的执念让开发者都感到害怕。',check:null,reward:200},
+  {id:'side_hustle',name:'副业',desc:'售卖第一瓶奶或第一瓶精液。',hidden_text:'恭喜你开辟了新的商业版图。从调教师到体液贩子，职业跨度令人叹为观止。',check:null,reward:200},
+  {id:'dairy_farm',name:'奶牛厂厂主',desc:'累计售卖一百瓶奶。',hidden_text:'你已经可以注册一个商标了。建议叫"鲜榨人奶"，纯天然无添加。',check:null,reward:200},
+  {id:'not_a_drop',name:'一滴不剩',desc:'累计售卖一百瓶精液。',hidden_text:'一百瓶精液。你是开了个精子银行还是怎么的。',check:null,reward:200},
+  {id:'no_food_survive',name:'人不吃饭也能活对吧？',desc:'一条狗不喂任何食物和水存活十天。',hidden_text:'解锁这条成就，想必你也发现了新天地了吧？恭喜你，走上周扒皮之路！',check:null,reward:200},
+  {id:'breast_enhance',name:'必先利其器',desc:'给一个有奶的对象使用丰胸药。',hidden_text:'工欲善其事必先利其器。大胸才能产大奶。我吸——',check:null,reward:200},
+  {id:'top_scrooge',name:'顶级周扒皮',desc:'不买商店的任何食物和水的情况下达成真结局。',hidden_text:'从头到尾没花一分钱买过食物和水。那些狗吃什么活下来的？鸡巴精液里的蛋白质和水分吗？嗯，确实够吃够喝了，营养还挺均衡。',check:null,reward:200},
+  {id:'self_produced',name:'自产自销',desc:'用狗生产的精液或奶喂食其他狗。',hidden_text:'用一条狗的体液喂另一条狗。你在搞什么诡异的食物链实验？',check:null,reward:200},
+  {id:'careful_eye',name:'细心的人有钱拿',desc:'彩蛋：点击此成就即可触发。',hidden_text:'你居然真的一个一个点了过来。这份耐心用在正途上该多好。白拿500感恩戴德！',check:'click',reward:500},
+  {id:'bought_one',name:'金屋藏娇',desc:'买下一条狗。',hidden_text:'花大价钱买一个人。在二十一世纪这叫人口贩卖。我去，不早说！',check:null,reward:200},
+  {id:'violated_virgin',name:'言而无信',desc:'对主人不允许碰的狗进行性交。',hidden_text:'人家千叮咛万嘱咐说留给人家的。你倒好，转头就给人开了苞。',check:null,reward:200},
+  {id:'discarded_one',name:'始乱终弃',desc:'丢弃一条买下的狗。',hidden_text:'买来玩腻了就丢？你把人当什么了？哦对，你当的就是狗。',check:null,reward:200},
+  {id:'return_dog_3',name:'余情未了',desc:'被丢弃后主动回来的狗完成三次任务。',hidden_text:'被你丢了还三次回来找你。这不是斯德哥尔摩是啥？纯爱？',check:null,reward:200},
+  {id:'buy_all_tools',name:'军火库',desc:'购买过全部道具。',hidden_text:'全套到手，天下我有！',check:null,reward:200},
+  {id:'buy_all_costumes',name:'时装周',desc:'购买过全部服装。',hidden_text:'给调教对象准备了全套cos服。你到底是调教师还是摄影师？照片没少拍吧？',check:null,reward:200},
+  {id:'buy_all_facility',name:'豪华装修',desc:'购买过全部设施。',hidden_text:'调教室装修得比五星级酒店还豪华。只不过里面的"客人"都不太想住。',check:null,reward:200},
+  {id:'buy_all_drugs',name:'药剂师',desc:'购买过全部特殊药。',hidden_text:'所有改造人体的药物你都买齐了。你是调教师还是疯狂科学家？',check:null,reward:200},
+  {id:'five_rooms',name:'连锁经营',desc:'拥有五间调教室。',hidden_text:'五间调教室同时运转。你这个规模可以上市了。',check:null,reward:200},
+  {id:'max_affection',name:'真爱降临',desc:'一条买下的狗好感度达到100。',hidden_text:'一个被你买来当狗调教的人居然真的爱上了你。这个世界怎么了。',check:null,reward:200},
+  {id:'eagle_master',name:'驯鹰大师',desc:'成功驯服五条狗。',hidden_text:'五次熬鹰五次成功。你可以去应聘审讯专家了。',check:null,reward:200},
+  {id:'milk_and_semen',name:'液体大亨',desc:'同时拥有十瓶奶和十瓶精液。',hidden_text:'仓库里堆满了各种人体分泌物。你乐在其中吧？',check:null,reward:200},
+  {id:'dual_nature',name:'造物主',desc:'使用长逼药将三个男性变成双性。',hidden_text:'三个人被你强行改造了生理构造。弗兰肯斯坦看了都要叫你前辈。',check:null,reward:200},
+];
+
+const EQUIP_SEMEN_CUP_ID='semen_cup';
 
 const ORAL_LOW=[
   '强行掰开紧咬的牙关将手指探入口腔，舌头缩在口腔深处拼命躲避，上下牙齿猛然合拢咬住了入侵的手指，钻心的痛感从指尖炸开，抽回手的同时一巴掌扇在脸颊上，清脆的掌声在房间里回响，脸颊瞬间泛起五个指印状的红痕，嘴角因为巴掌的力道渗出了一丝血丝。',
@@ -658,7 +744,8 @@ const SHOP_ITEMS={
     {id:'ball_gag',name:'口球',icon:'🔴',price:85,desc:'软质球塞堵住嘴巴无法说话只能流口水呜咽。',effect:{obedience:[4,7]},insertable:false},
     {id:'ring_gag',name:'口枷',icon:'⭕',price:95,desc:'金属开口器撑开嘴巴，让口腔完全敞开随时待用。',effect:{obedience:[4,7],oral:[3,6]},insertable:false},
     {id:'enema',name:'灌肠器',icon:'💉',price:120,desc:'向肠道内灌入液体，用于清洁或羞辱性调教。',effect:{obedience:[5,9],hole:[3,5]},insertable:false},
-    {id:'milker',name:'吸奶器',icon:'🍼',price:180,desc:'负压吸吮乳头。有奶水时可产奶，无奶水时只会将乳头吸得又大又肿。',effect:{nipple:[5,9]},insertable:false},
+    {id:'milker',name:'吸奶器',icon:'🍼',price:180,desc:'负压吸吮乳头。有奶水时可产奶，无奶水时只会将乳头吸得又大又肿。穿奶牛装时可佩戴自动产奶。',effect:{nipple:[5,9]},insertable:false},
+    {id:'semen_cup',name:'榨精杯',icon:'🫗',price:140,desc:'固定在柱体上持续榨取。每2小时产出一瓶精液（每人每天上限3瓶）。可佩戴。',effect:{cock:[4,7]},insertable:false},
   ],
   costumes:[
     {id:'maid',name:'女仆装',icon:'👗',price:200,desc:'黑白蕾丝围裙配过膝长袜。穿上后服从度训练加成。',bonus:'obedience_boost'},
@@ -691,7 +778,13 @@ const SHOP_ITEMS={
     {id:'milk_drug_male',name:'产奶药（男用）',icon:'🧬',price:400,desc:'使正常男性的乳腺发育并开始泌乳。使用后永久获得产奶能力。',drugType:'milk_male'},
     {id:'milk_drug_futa',name:'产奶药（双性用）',icon:'🧬',price:280,desc:'使双性人的乳腺开始泌乳。使用后永久获得产奶能力。',drugType:'milk_futa'},
     {id:'pussy_drug',name:'长逼药',icon:'💊',price:500,desc:'使正常男性长出女性生殖器官变为双性人。使用后永久变为双性。',drugType:'grow_pussy'},
+    {id:'breast_drug',name:'丰胸药',icon:'💊',price:350,desc:'使用后胸部大幅发育变成大奶子。穿奶牛装时产奶时间从12小时缩短为10小时。',drugType:'breast_enhance'},
   ],
+};
+
+const PRODUCED_ITEMS={
+  produced_milk:{id:'produced_milk',name:'鲜奶',icon:'🥛',price:40,desc:'从奶牛身上挤出的新鲜奶水。恢复100饥渴度。',feedType:'water',feedAmount:100,produced:true},
+  produced_semen:{id:'produced_semen',name:'精液',icon:'🫙',price:10,desc:'从狗身上榨出的精液。恢复15饥渴度。',feedType:'water',feedAmount:15,produced:true},
 };
 
 const COSTUME_BONUS_MAP={
@@ -702,13 +795,13 @@ const COSTUME_BONUS_MAP={
   cock_boost:{field:'cock',mult:1.6,label:'鸡巴+60%'},
 };
 
-let gameState={started:false,day:1,hour:8,minute:0,gold:500,exp:0,level:0,reputation:5,rooms:[{id:0,occupied:false,dog:null,facilities:[],log:[]}],inventory:[],fontSize:14,currentGuest:null,activeRoomId:null,history:[],apiConfig:{url:'',key:'',model:''},ownedDogs:[]};
+let gameState={started:false,day:1,hour:8,minute:0,gold:500,exp:0,level:0,reputation:5,rooms:[{id:0,occupied:false,dog:null,facilities:[],log:[]}],inventory:[],fontSize:14,currentGuest:null,activeRoomId:null,history:[],apiConfig:{url:'',key:'',model:'',savedConfigs:[]},ownedDogs:[],achievements:{},stats:{successStreak:0,totalSuccess:0,totalFail:0,milkSold:0,semenSold:0,everBoughtFood:false,everBoughtWater:false,toolsBought:new Set(),costumesBought:new Set(),facilityBought:new Set(),drugsBought:new Set(),dogsBought:0,dogsDiscarded:0,returnDogCompleted:0,eagleSuccess:0,pussyDrugUsed:0,producedItems:[]},discardedDogs:[]};
 const MAX_SAVE_SLOTS=3;
 
 function pick(a){return a[Math.floor(Math.random()*a.length)];}
 function randInt(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
 function statLabel(k){return{obedience:'服从度',nipple:'乳头',cock:'鸡巴',hole:'后穴',pussy:'小穴',addiction:'性瘾',masochism:'M属性',oral:'口腔'}[k]||k;}
-function getShopItemById(id){for(const c of Object.values(SHOP_ITEMS)){const f=c.find(i=>i.id===id);if(f)return f;}return null;}
+function getShopItemById(id){if(PRODUCED_ITEMS[id])return PRODUCED_ITEMS[id];for(const c of Object.values(SHOP_ITEMS)){const f=c.find(i=>i.id===id);if(f)return f;}return null;}
 function getItemById(id){return getShopItemById(id);}
 function getShopCategory(id){for(const[c,items]of Object.entries(SHOP_ITEMS)){if(items.find(i=>i.id===id))return c;}return null;}
 function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
@@ -740,7 +833,13 @@ function getMasochismLine(d){
   const m=d.stats.masochism||0;
   return m<30?pick(MASOCHISM_LOW):m<65?pick(MASOCHISM_MID):pick(MASOCHISM_HIGH);
 }
-function getOwnedMindText(){return pick(OWNED_MIND_POOL);}
+function getOwnedMindText(dog){
+  if(!dog)return pick(OWNED_MIND_HIGH);
+  const aff=dog.affection||0;
+  if(aff<30)return pick(OWNED_MIND_LOW);
+  if(aff<65)return pick(OWNED_MIND_MID);
+  return pick(OWNED_MIND_HIGH);
+}
 
 function getTrainText(toolId, dog, targetPart){
   if(dog.costume && T[dog.costume] && Math.random()<0.3) return pick(T[dog.costume]);
@@ -777,10 +876,32 @@ function advanceTime(min){
   const daysPassed=gameState.day-prevDay;
   if(daysPassed>0){for(let i=0;i<daysPassed;i++)decayAllDogNeeds();}
   else{
-    // Partial hour decay
     const hrs=Math.floor(min/60);
-    if(hrs>0){gameState.rooms.forEach(room=>{if(room.occupied&&room.dog){room.dog.hunger=Math.max(0,room.dog.hunger-hrs*2);room.dog.thirst=Math.max(0,room.dog.thirst-hrs*3);}});}
+    if(hrs>0){
+      gameState.rooms.forEach(room=>{
+        if(room.occupied&&room.dog){
+          room.dog.hunger=Math.max(0,room.dog.hunger-hrs*2);
+          room.dog.thirst=Math.max(0,room.dog.thirst-hrs*3);
+        }
+      });
+    }
   }
+  // Accumulate fractional hour progress for all equipped dogs
+  gameState.rooms.forEach(room=>{
+    if(room.occupied&&room.dog){
+      const dog=room.dog;
+      if(!dog.equippedItems||!dog.equippedItems.length)return;
+      if(!dog._minuteAccum)dog._minuteAccum=0;
+      dog._minuteAccum+=min;
+      const fullHours=Math.floor(dog._minuteAccum/60);
+      if(fullHours>0){
+        dog._minuteAccum-=fullHours*60;
+        for(let h=0;h<fullHours;h++){
+          processIdleEquipment(room);
+        }
+      }
+    }
+  });
   checkDeathAll();
   renderStatusBar();
 }
@@ -801,11 +922,14 @@ function skipOneHour(){
       room.dog.hunger=Math.max(0,room.dog.hunger-2);
       room.dog.thirst=Math.max(0,room.dog.thirst-3);
       processIdleEquipment(room);
+            room.dog._minuteAccum=0;
+      // Reset daily semen counter on new day
+      if(gameState.hour===23){room.dog._semenToday=0;}
     }
   });
   gameState.minute+=60;
   while(gameState.minute>=60){gameState.minute-=60;gameState.hour++;}
-  while(gameState.hour>=24){gameState.hour-=24;gameState.day++;decayAllDogNeeds();}
+  while(gameState.hour>=24){gameState.hour-=24;gameState.day++;decayAllDogNeeds();gameState.rooms.forEach(r=>{if(r.occupied&&r.dog)r.dog._semenToday=0;});}
   checkDeathAll();
   renderStatusBar();
   if(gameState.activeRoomId!==null){const room=gameState.rooms.find(r=>r.id===gameState.activeRoomId);if(room?.occupied)openTrainingPanel(room.id);}
@@ -823,17 +947,62 @@ function decayAllDogNeeds(){
 }
 
 function processIdleEquipment(room){
-  if(!room.dog?.equippedItems?.length)return;
+  if(!room.dog)return;
   const dog=room.dog;
+  if(!dog.equippedItems)dog.equippedItems=[];
+  if(!dog._equipTargets)dog._equipTargets={};
+  if(!dog._milkTimer)dog._milkTimer=0;
+  if(!dog._semenTimer)dog._semenTimer=0;
+  if(!dog._semenToday)dog._semenToday=0;
+
   dog.equippedItems.forEach(eqId=>{
     const item=getShopItemById(eqId);
-    if(item?.effect){Object.entries(item.effect).forEach(([k,[min,max]])=>{const val=randInt(Math.floor(min*0.3),Math.floor(max*0.4));if(dog.stats[k]!==undefined&&val>0)dog.stats[k]=Math.min(100,dog.stats[k]+val);});}
-    if(item?.insertable)dog.stats.addiction=Math.min(100,(dog.stats.addiction||0)+1);
+    if(!item)return;
+    const tgt=dog._equipTargets[eqId];
+
+    if(eqId==='milker'&&dog.canMilk&&dog.costume==='cowgirl'){
+      const milkInterval=dog.bigBreasts?10:12;
+      dog._milkTimer=(dog._milkTimer||0)+1;
+      if(dog._milkTimer>=milkInterval){
+        dog._milkTimer=0;
+        gameState.inventory.push({id:'produced_milk',producedBy:dog.name});
+        if(!room.log)room.log=[];
+        room.log.push(`<span style="color:var(--accent-gold);">[产奶]</span> ${dog.name}的吸奶器收集满了一瓶鲜奶，已存入仓库。`);
+      }
+    }
+
+    if(eqId==='semen_cup'){
+      dog._semenTimer=(dog._semenTimer||0)+1;
+      if(dog._semenTimer>=2&&(dog._semenToday||0)<3){
+        dog._semenTimer=0;
+        dog._semenToday=(dog._semenToday||0)+1;
+        gameState.inventory.push({id:'produced_semen',producedBy:dog.name});
+        if(!room.log)room.log=[];
+        room.log.push(`<span style="color:var(--accent-gold);">[榨精]</span> ${dog.name}的榨精杯收集了一瓶精液，已存入仓库。`);
+      }
+    }
+
+    if(item.effect){
+      Object.entries(item.effect).forEach(([k,[min,max]])=>{
+        const val=randInt(Math.floor(min*0.3),Math.floor(max*0.4));
+        if(tgt&&(k==='hole'||k==='pussy')){
+          if(k===tgt&&dog.stats[k]!==undefined&&val>0)dog.stats[k]=Math.min(100,dog.stats[k]+val);
+        } else {
+          if(dog.stats[k]!==undefined&&val>0)dog.stats[k]=Math.min(100,dog.stats[k]+val);
+        }
+      });
+    }
+    if(item.insertable||tgt==='hole'||tgt==='pussy'){
+      dog.stats.addiction=Math.min(100,(dog.stats.addiction||0)+1);
+      if(tgt==='hole'&&dog.stats.hole!==undefined)dog.stats.hole=Math.min(100,dog.stats.hole+randInt(1,2));
+      if(tgt==='pussy'&&dog.stats.pussy!==undefined)dog.stats.pussy=Math.min(100,dog.stats.pussy+randInt(1,2));
+    }
   });
+
   const obe=dog.stats.obedience;
   const pool=obe<30?IDLE_TEXTS.low:obe<65?IDLE_TEXTS.mid:IDLE_TEXTS.high;
   if(!room.log)room.log=[];
-  room.log.push(`<span style="color:var(--text-dim);">[自动]</span> ${pick(pool)}`);
+  if(dog.equippedItems.length>0)room.log.push(`<span style="color:var(--text-dim);">[自动]</span> ${pick(pool)}`);
   if(room.log.length>60)room.log=room.log.slice(-60);
 }
 
@@ -870,7 +1039,7 @@ function checkTrueEnding(){
       `你起身正了正衣领，向门口走去。`,
       `这条路还很长，你已经站在了最高的地方。`
     ];
-    document.getElementById('gameoverTitle').textContent='👑 真结局：天下第一馆';
+    document.getElementById('gameoverTitle').textContent='👑 真结局：草逼无数';
     document.getElementById('gameoverTitle').style.color='var(--accent-gold)';
     document.getElementById('gameoverBox').className='gameover-box true-end';
     document.getElementById('gameoverText').innerHTML=txt.join('<br><br>');
@@ -882,7 +1051,7 @@ function checkTrueEnding(){
 function continuePlaying(){document.getElementById('gameoverOverlay').classList.remove('active');}
 
 function restartGame(){
-  gameState={started:true,day:1,hour:8,minute:0,gold:500,exp:0,level:0,reputation:5,rooms:[{id:0,occupied:false,dog:null,facilities:[],log:[]}],inventory:[],fontSize:gameState.fontSize||14,currentGuest:null,activeRoomId:null,history:gameState.history||[],apiConfig:gameState.apiConfig||{url:'',key:'',model:''},ownedDogs:[]};
+  gameState={started:true,day:1,hour:8,minute:0,gold:500,exp:0,level:0,reputation:5,rooms:[{id:0,occupied:false,dog:null,facilities:[],log:[]}],inventory:[],fontSize:gameState.fontSize||14,currentGuest:null,activeRoomId:null,history:gameState.history||[],apiConfig:gameState.apiConfig||{url:'',key:'',model:'',savedConfigs:[]},ownedDogs:[],achievements:gameState.achievements||{},stats:{successStreak:0,totalSuccess:0,totalFail:0,milkSold:0,semenSold:0,everBoughtFood:false,everBoughtWater:false,toolsBought:new Set(),costumesBought:new Set(),facilityBought:new Set(),drugsBought:new Set(),dogsBought:0,dogsDiscarded:0,returnDogCompleted:0,eagleSuccess:0,pussyDrugUsed:0,producedItems:[]},discardedDogs:[]};
   document.getElementById('gameoverOverlay').classList.remove('active');
   document.getElementById('completeOverlay').classList.remove('active');
   document.getElementById('trainingPanel').classList.remove('active');
@@ -963,6 +1132,13 @@ function startWaiting(){
 }
 
 function generateGuest(container){
+  // Check for returning discarded dog
+  const returnCandidates=(gameState.discardedDogs||[]).filter(d=>d.affection>=80);
+  if(returnCandidates.length>0&&Math.random()<0.3){
+    generateReturnDog(container,pick(returnCandidates));
+    return;
+  }
+
   const isFuta=Math.random()<0.35;const dogName=generateName();const dogType=isFuta?'双性':'男';
   const ownerIsFemale=Math.random()<0.5;const ownerName=pick(SURNAMES)+pick(ownerIsFemale?OWNER_F_SFX:OWNER_M_SFX);
   const star=randInt(1,RANK_TABLE[gameState.level].maxStar);
@@ -974,12 +1150,33 @@ function generateGuest(container){
   const previewExp=randInt(...STAR_EXP_RANGE[star]),previewGold=randInt(...STAR_GOLD_RANGE[star]);
   const stats={obedience:randInt(5,15),nipple:randInt(5,12),cock:randInt(5,12),hole:randInt(5,12),addiction:0,masochism:0,oral:randInt(3,10)};
   if(isFuta)stats.pussy=randInt(5,12);
-  const dog={name:dogName,type:dogType,height:pick(HEIGHT_POOL),build:pick(BUILD_POOL),skin:pick(SKIN_POOL),nipple:pick(NIPPLE_POOL),cock:pick(COCK_POOL),hole:pick(HOLE_POOL),pussy:isFuta?pick(PUSSY_POOL):null,stats,target,ownerName,costume:null,keepVirginity:vo.keep,hasBeenFucked:false,hunger:80,thirst:80,equippedItems:[],nippleAppearance:NIP_APP[0],cockAppearance:COCK_APP[0],holeAppearance:HOLE_APP[0],pussyAppearance:isFuta?PUSSY_APP[0]:null,addictionAppearance:ADDICT_APP[0],masochismAppearance:M_APP[0],oralAppearance:ORAL_APP[0],eagleBroken:false,eagleActive:false,eagleStart:0,eagleDuration:0,owned:false,affection:0,canMilk:false,grewPussy:false,hasGag:false};
+  const dog={name:dogName,type:dogType,height:pick(HEIGHT_POOL),build:pick(BUILD_POOL),skin:pick(SKIN_POOL),nipple:pick(NIPPLE_POOL),cock:pick(COCK_POOL),hole:pick(HOLE_POOL),pussy:isFuta?pick(PUSSY_POOL):null,stats,target,ownerName,costume:null,keepVirginity:vo.keep,hasBeenFucked:false,hunger:80,thirst:80,equippedItems:[],nippleAppearance:NIP_APP[0],cockAppearance:COCK_APP[0],holeAppearance:HOLE_APP[0],pussyAppearance:isFuta?PUSSY_APP[0]:null,addictionAppearance:ADDICT_APP[0],masochismAppearance:M_APP[0],oralAppearance:ORAL_APP[0],eagleBroken:false,eagleActive:false,eagleStart:0,eagleDuration:0,owned:false,affection:0,canMilk:false,grewPussy:false,hasGag:false,bigBreasts:false,isReturnDog:false,returnCount:0,noFeedDays:0,_equipTargets:{},_milkTimer:0,_semenTimer:0,_semenToday:0};
   gameState.currentGuest={dog,star,reqTexts,ownerName,previewExp,previewGold,virginText:vo.text};
   const pron=ownerIsFemale?'她':'他';
   let bd=`身高 <span>${dog.height}</span><br>体型 <span>${dog.build}</span><br>肤色 <span>${dog.skin}</span><br>乳头 <span>${dog.nipple}</span><br>鸡巴 <span>${dog.cock}</span><br>后穴 <span>${dog.hole}</span>`;
   if(isFuta)bd+=`<br>小穴 <span>${dog.pussy}</span>`;
   container.innerHTML=`<div class="guest-card"><h3>👤 ${ownerName} 带着一条${dogType==='双性'?'双性':'公'}狗前来</h3><div class="star-display">${'⭐'.repeat(star)} ${star}星任务</div><div class="guest-info">${pron}把锁链拴着的${dogType==='双性'?'双性人':'男人'}推到你面前，上下打量了一眼，嘴角带着轻蔑的笑。<br><br>"新收的狗，叫 <span>${dogName}</span>。"${pron}拽了拽锁链，${dogName}踉跄着往前撞了两步。<br><br>${bd}</div><div class="requirement-box"><div class="requirement-title">📋 主人的要求 (${star}项)</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">${reqTexts.map(t=>`"${t}"`).join('<br>')}</div><div style="margin-top:8px;font-size:11px;color:var(--text-dim);">目标：${Object.entries(target).map(([k,v])=>`${statLabel(k)}≥${v}`).join(' | ')}</div></div><div class="requirement-box" style="border-color:rgba(212,168,67,0.3);background:rgba(212,168,67,0.05);"><div class="requirement-title" style="color:var(--accent-gold);">🔒 关于第一次</div><div style="font-size:13px;color:var(--text-secondary);">${pron}说："${vo.text}"</div><div style="margin-top:4px;font-size:11px;color:${vo.keep?'var(--danger)':'var(--success)'};">${vo.keep?'⚠️ 禁止性交只能用道具':'✅ 可以进行性交'}</div></div><div class="reward-preview">📦 完成奖励：💰${previewGold} | ⚡${previewExp} | ⭐+1</div><div class="guest-actions"><button class="btn btn-success" onclick="acceptGuest()">✅ 接单</button><button class="btn btn-danger" onclick="rejectGuest()">❌ 拒绝</button></div></div>`;
+}
+
+function generateReturnDog(container,discardedInfo){
+  const previewGold=randInt(...STAR_GOLD_RANGE[2])*2;
+  const previewExp=randInt(...STAR_EXP_RANGE[2]);
+  const sexCount=randInt(2,5);
+  const playCount=randInt(3,8);
+  const playPart=pick(['nipple','cock']);
+  const target={};
+  // Return dog uses action-count based targets instead of stat targets
+  const dog={...discardedInfo,target,ownerName:discardedInfo.name+'（自来）',keepVirginity:false,hasBeenFucked:false,hunger:80,thirst:80,equippedItems:[],eagleBroken:discardedInfo.eagleBroken||false,eagleActive:false,owned:false,affection:discardedInfo.affection||0,isReturnDog:true,returnSexTarget:sexCount,returnPlayTarget:playCount,returnPlayPart:playPart,returnSexDone:0,returnPlayDone:0,_actions:[],_equipTargets:{},_milkTimer:0,_semenTimer:0,_semenToday:0};
+
+  gameState.currentGuest={dog,star:2,reqTexts:[`被操${sexCount}次`,`${statLabel(playPart)}被把玩${playCount}次`],ownerName:dog.name,previewExp,previewGold,virginText:'随便你怎么处置',isReturn:true};
+
+  container.innerHTML=`<div class="guest-card" style="border-color:#e8a;"><h3>💖 ${dog.name} 自己回来了</h3>
+    <div style="font-size:12px;color:#e8a;margin-bottom:8px;">${pick(RETURN_DOG_LINES)}</div>
+    <div class="star-display">⭐⭐ 特殊任务（回归）</div>
+    <div class="guest-info">${dog.name}（${dog.type}${dog.grewPussy?' → 双性':''}）自行前来，要求再次接受调教。<br>身高 <span>${dog.height}</span><br>体型 <span>${dog.build}</span></div>
+    <div class="requirement-box"><div class="requirement-title">📋 请求</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">"请操我${sexCount}次……还有${statLabel(playPart)}也想被碰${playCount}次……"</div></div>
+    <div class="reward-preview">📦 完成奖励：💰${previewGold}（双倍） | ⚡${previewExp} | ⭐+1</div>
+    <div class="guest-actions"><button class="btn btn-success" onclick="acceptGuest()">✅ 接单</button><button class="btn btn-danger" onclick="rejectGuest()">❌ 拒绝</button></div></div>`;
 }
 
 function acceptGuest(){
@@ -1029,10 +1226,22 @@ function buildRoom(){
 function releaseDog(rid){
   const room=gameState.rooms.find(r=>r.id===rid);if(!room?.occupied)return;
   if(room.dog.owned){showToast('已买下的狗不能释放！');return;}
-  if(room.dog.equippedItems)room.dog.equippedItems.forEach(e=>gameState.inventory.push({id:e}));
+  if(!confirm(`释放 ${room.dog.name} 将视为任务失败，扣除5点声望。确定？`))return;
+  const dog=room.dog;
+  // Record as failure in history
+  const histEntry={name:dog.name,type:dog.type,star:dog._star,ownerName:dog.ownerName,target:{...dog.target},finalStats:{...dog.stats},success:false,actions:dog._actions||[],date:`第${gameState.day}天`,note:'主动释放'};
+  if(!gameState.history)gameState.history=[];gameState.history.push(histEntry);
+  gameState.reputation=Math.max(0,gameState.reputation-5);
+  if(!gameState.stats)gameState.stats={};
+  gameState.stats.successStreak=0;
+  gameState.stats.totalFail=(gameState.stats.totalFail||0)+1;
+  checkAchievement('first_fail');
+
+  if(dog.equippedItems)dog.equippedItems.forEach(e=>gameState.inventory.push({id:e}));
   room.occupied=false;room.dog=null;room.log=[];
   if(gameState.activeRoomId===rid){document.getElementById('trainingPanel').classList.remove('active');gameState.activeRoomId=null;}
-  renderRooms();renderLobby();renderInventory();autoSave();
+  renderRooms();renderLobby();renderInventory();renderStatusBar();autoSave();
+  showToast(`${dog.name} 已释放。声望 -5。`);
 }
 
 function openTrainingPanel(rid){
@@ -1078,24 +1287,65 @@ function openTrainingPanel(rid){
     tgt+=`<div class="target-row"><span>${statLabel(k)}</span><span class="current">${cur}</span><span>→</span><span class="${ok?'achieved':'goal'}">${tv||'--'} ${ok?'✅':''}</span></div>`;
     if(app)tgt+=`<div style="font-size:10px;color:var(--text-dim);margin-bottom:4px;padding-left:8px;">外观：${app}</div>`;
   });
-  if(d.keepVirginity)tgt+=`<div style="font-size:11px;color:var(--danger);margin-top:6px;">⚠️ 禁止性交 ${d.hasBeenFucked?'（⛔ 已违反）':''}</div>`;
+  if(d.keepVirginity&&!d.owned)tgt+=`<div style="font-size:11px;color:var(--danger);margin-top:6px;">⚠️ 禁止性交 ${d.hasBeenFucked?'（⛔ 已违反）':''}</div>`;
   if(d.eagleBroken)tgt+=`<div style="font-size:11px;color:var(--success);margin-top:4px;">🕊️ 已驯服，不再反抗</div>`;
   if(d.eagleActive)tgt+=`<div style="font-size:11px;color:var(--danger);margin-top:4px;">🦅 熬鹰进行中</div>`;
   if(d.owned){
     tgt+=`<div style="font-size:11px;color:#e8a;margin-top:4px;">💖 好感度：${d.affection||0}</div>`;
-    tgt+=`<div class="mind-text">${getOwnedMindText()}</div>`;
+    tgt+=`<div class="mind-text">${getOwnedMindText(d)}</div>`;
   }
   document.getElementById('tpTargets').innerHTML=tgt;
 
-  document.getElementById('tpEquipped').innerHTML=d.equippedItems?.length?`<div style="font-size:11px;color:var(--text-dim);">🔧 ${d.equippedItems.map(e=>`<span style="color:var(--accent-red);">${getItemById(e)?.name}</span> <button class="btn btn-sm btn-secondary" style="padding:2px 6px;font-size:10px;" onclick="unequipItem(${rid},'${e}')">卸下</button>`).join(' ')}</div>`:'';
+  let eqHtml='';
+  if(d.equippedItems?.length){
+    eqHtml+='<div style="font-size:11px;color:var(--text-dim);">🔧 ';
+    eqHtml+=d.equippedItems.map(e=>`<span style="color:var(--accent-red);">${getItemById(e)?.name}</span> <button class="btn btn-sm btn-secondary" style="padding:2px 6px;font-size:10px;" onclick="unequipItem(${rid},'${e}')">卸下</button>`).join(' ');
+    eqHtml+='</div>';
+
+    // Milker progress
+    if(d.equippedItems.includes('milker')&&d.canMilk&&d.costume==='cowgirl'){
+      const milkInterval=d.bigBreasts?10:12;
+      const milkProgress=Math.min((d._milkTimer||0)/milkInterval*100,100);
+      eqHtml+=`<div style="margin-top:4px;font-size:10px;color:var(--accent-gold);">🥛 产奶进度：<div style="display:inline-block;width:100px;height:8px;background:var(--bg-primary);border-radius:4px;vertical-align:middle;overflow:hidden;border:1px solid var(--border-color);"><div style="height:100%;width:${milkProgress}%;background:linear-gradient(90deg,#fff8,#ffd700);border-radius:4px;transition:width 0.3s;"></div></div> ${d._milkTimer||0}/${milkInterval}h</div>`;
+    }
+
+    // Semen cup progress
+    if(d.equippedItems.includes('semen_cup')){
+      const semenToday=d._semenToday||0;
+      if(semenToday>=3){
+        eqHtml+=`<div style="margin-top:4px;font-size:10px;color:var(--danger);">🫗 今日已榨干（3/3），冷却中，等待新的一天</div>`;
+      } else {
+        const semenProgress=Math.min((d._semenTimer||0)/2*100,100);
+        eqHtml+=`<div style="margin-top:4px;font-size:10px;color:var(--text-secondary);">🫗 榨精进度：<div style="display:inline-block;width:100px;height:8px;background:var(--bg-primary);border-radius:4px;vertical-align:middle;overflow:hidden;border:1px solid var(--border-color);"><div style="height:100%;width:${semenProgress}%;background:linear-gradient(90deg,#aaf8,#88f);border-radius:4px;transition:width 0.3s;"></div></div> ${d._semenTimer||0}/2h · 今日${semenToday}/3瓶</div>`;
+      }
+    }
+  }
+  document.getElementById('tpEquipped').innerHTML=eqHtml;
 
   const facEl=document.getElementById('tpFacilities');
   facEl.innerHTML=room.facilities?.length?'<div style="font-size:11px;color:var(--accent-gold);margin-bottom:4px;">🏗️ 设施：</div>'+room.facilities.map(fId=>{const fi=getItemById(fId);return fi?.usable?`<button class="btn btn-sm btn-secondary" style="margin:2px;" onclick="useFacility(${rid},'${fId}')">${fi.icon} ${fi.name}</button>`:`<span style="font-size:11px;">${fi?.icon} ${fi?.name}</span>`;}).join(' '):'';
 
   if(!room._enterShown){if(!room.log)room.log=[];room.log.push(`<span class="dialogue">${getDogEnterLine(d)}</span>`);room._enterShown=true;}
 
-  // Show milk button if can milk
-  document.getElementById('drinkMilkBtn').style.display=d.canMilk?'inline-flex':'none';
+  // Dynamic action buttons
+  let actionBtns=`<button class="btn btn-secondary btn-sm" onclick="closeTrainingPanel()">返回</button>
+    <button class="btn btn-gold btn-sm" onclick="feedDog('food')">🍖投喂</button>
+    <button class="btn btn-gold btn-sm" onclick="feedDog('water')">💧喂水</button>
+    <button class="btn btn-gold btn-sm" onclick="feedSpecial()">🫗特殊喂食</button>
+    <button class="btn btn-primary btn-sm" onclick="openSexChoice()">🔞性交</button>
+    <button class="btn btn-primary btn-sm" onclick="openOralChoice()">👄口交</button>
+    <button class="btn btn-secondary btn-sm" onclick="startEagle()">🦅熬鹰</button>`;
+  if(!d.owned)actionBtns+=`<button class="btn btn-success btn-sm" onclick="tryCompleteTraining()">完成调教</button>`;
+  document.getElementById('tpActionButtons').innerHTML=actionBtns;
+
+  let extraBtns='';
+  if(d.owned){
+    extraBtns+=`<button class="btn btn-sm btn-danger" style="font-size:11px;" onclick="discardOwnedDog()">🗑️丢弃</button>`;
+  } else {
+    extraBtns+=`<button class="btn btn-sm" style="background:#5a2a6a;color:#e8d8e0;font-size:11px;" onclick="openBuyModal()">💖买下</button><span class="buy-hint" onclick="showToast('太喜欢这条狗了？花钱买下来吧，从此归你所有。费用为任务报酬的十倍。')">?</span>`;
+  }
+  extraBtns+=`<button class="btn btn-sm btn-secondary" id="drinkMilkBtn" style="${d.canMilk?'':'display:none;'}" onclick="drinkMilk()">🥛吸奶</button>`;
+  document.getElementById('tpExtraButtons').innerHTML=extraBtns;
 
   renderToolGrid(room);renderTrainingLog(room);
 }
@@ -1126,7 +1376,8 @@ function renderToolGrid(room){
     } else {
       addTB(el,item.icon,item.name,()=>doTraining(room.id,tid,null));
     }
-    if(item.insertable)addTB(el,'📌','装配'+item.name,()=>equipItem(room.id,tid));
+    if(item.insertable||tid==='semen_cup')addTB(el,'📌','装配'+item.name,()=>equipItem(room.id,tid));
+    if(tid==='milker'&&d.canMilk&&d.costume==='cowgirl')addTB(el,'📌','装配吸奶器',()=>equipItem(room.id,tid));
   });
   const cSeen=new Set();
   gameState.inventory.filter(inv=>getShopCategory(inv.id)==='costumes').forEach(inv=>{
@@ -1181,16 +1432,32 @@ function useDrug(rid,drugId){
   if(item.drugType==='milk_futa'&&dog.type!=='双性'&&!dog.grewPussy){showToast('该药品仅限双性使用。');return;}
   if(item.drugType==='grow_pussy'&&(dog.type==='双性'||dog.grewPussy)){showToast('该对象已有女性器官。');return;}
   if(item.drugType==='grow_pussy'&&dog.type!=='男'){showToast('该药品仅限男性使用。');return;}
+  if(item.drugType==='breast_enhance'&&dog.bigBreasts){showToast('该对象已经是大奶子了。');return;}
+  if(item.drugType==='breast_enhance'&&!dog.canMilk){showToast('该对象需要先有产奶能力。');return;}
   gameState.inventory.splice(idx,1);
   if(!room.log)room.log=[];
+
+  // Track drug purchases
+  if(!gameState.stats)gameState.stats={};
+  if(!gameState.stats.drugsBought)gameState.stats.drugsBought=new Set();
+  if(typeof gameState.stats.drugsBought==='object'&&!gameState.stats.drugsBought.has)gameState.stats.drugsBought=new Set(Object.values(gameState.stats.drugsBought));
+  gameState.stats.drugsBought.add(drugId);
+
   if(item.drugType==='milk_male'||item.drugType==='milk_futa'){
     dog.canMilk=true;
     room.log.push(`将产奶药强行灌入了 ${dog.name} 的嘴里。药效很快开始发作，${dog.name}的胸部开始微微胀痛，乳腺在药物的作用下迅速发育，乳头变得更加突出肿胀，挤压时已经能看到清澈的液体从乳孔中渗出。`);
     room.log.push(`<span class="dialogue">"胸口……好胀……怎么回事……你给我灌了什么……！"</span>`);
   } else if(item.drugType==='grow_pussy'){
     dog.grewPussy=true;dog.stats.pussy=randInt(5,12);dog.pussy=pick(PUSSY_POOL);dog.pussyAppearance=PUSSY_APP[0];
+    gameState.stats.pussyDrugUsed=(gameState.stats.pussyDrugUsed||0)+1;
+    if(gameState.stats.pussyDrugUsed>=3)checkAchievement('dual_nature');
     room.log.push(`将长逼药灌入了 ${dog.name} 的嘴里。药效猛烈而迅速，${dog.name}的下体开始剧烈地痉挛扭动，鸡巴的根部下方，会阴的位置开始出现一条逐渐裂开的缝隙，粉嫩的花瓣从裂缝中慢慢绽放出来形成了一个完整的女性器官。`);
     room.log.push(`<span class="dialogue">"啊啊啊！！下面……下面裂开了……不……长出来了什么……！？"</span>`);
+  } else if(item.drugType==='breast_enhance'){
+    dog.bigBreasts=true;
+    checkAchievement('breast_enhance');
+    room.log.push(BREAST_DRUG_TEXT);
+    room.log.push(`<span class="dialogue">"胸……胸变大了……好重……这是什么感觉……"</span>`);
   }
   if(!dog._actions)dog._actions=[];dog._actions.push({action:'drug_'+drugId,time:formatTime(),day:gameState.day});
   advanceTime(15);renderTrainingLog(room);openTrainingPanel(rid);renderRooms();renderInventory();autoSave();
@@ -1200,8 +1467,30 @@ function drinkMilk(){
   const room=gameState.rooms.find(r=>r.id===gameState.activeRoomId);if(!room?.occupied)return;
   const dog=room.dog;if(!dog.canMilk){showToast('该对象无法产奶。');return;}
   if(!room.log)room.log=[];
-  room.log.push(`俯下身含住${dog.name}肿胀的乳头用力吸吮，温热的奶水从乳孔中涌入口腔，甜腻带着淡淡腥味的乳汁在舌面上蔓延开来，乳头在吸吮中被拉伸到极限变得更加红肿敏感，${dog.name}的身体在泌乳的刺激下不停颤抖着发出压抑的呻吟。`);
-  room.log.push(`<span class="dialogue">${dog.stats.obedience>50?'"主人……喝吧……奶水都是主人的……♡"':'"不……不要吸……那里……啊……！"'}</span>`);
+  const MILK_DRINK_TEXTS=[
+    `俯下身含住${dog.name}肿胀的乳头用力吸吮，温热的奶水从乳孔中涌入口腔，甜腻带着淡淡腥味的乳汁在舌面上蔓延开来，乳头在吸吮中被拉伸到极限变得更加红肿敏感，${dog.name}的身体在泌乳的刺激下不停颤抖着发出压抑的呻吟。`,
+    `张嘴含住饱胀的乳尖轻轻嘬了一口，奶水像被打开开关般喷涌而出冲刷着舌根，乳晕在嘴唇的包裹下被反复碾压揉搓，${dog.name}的腰猛地弓了起来双手无处安放地揪住身下的布料，乳腺在持续的吸吮刺激下加速泌乳，能听到吞咽奶水时咕嘟咕嘟的声响。`,
+    `舌尖拨弄着涨硬的乳头找到出奶的小孔后用力一吸，第一股奶水带着体温的热度灌进嘴里，浓郁的奶腥味充斥了整个口腔，${dog.name}浑身剧烈地颤了一下，乳房在吸吮的负压下微微变形，从另一侧没被照顾到的乳头也开始自行渗出白色的液体沿着胸口往下流。`,
+    `用牙齿轻轻叼住乳尖往外拉扯了一截再含入嘴中深深吸吮，奶水在负压下从乳孔中源源涌出，每一口都带着${dog.name}身体的温度和微甜的腥味，被吸奶的那侧乳房在持续排空的过程中慢慢变软，乳头却越吸越胀越红，${dog.name}的脚趾蜷缩着在地面上无意识地蹭动。`,
+    `嘴唇箍紧乳晕的边缘制造出密封的负压环境然后用力吸吮，奶水被抽出来的速度肉眼可见地加快了，白色液体从嘴角溢出来沿着下巴滴在${dog.name}的胸口上，泌乳带来的酸胀快感让${dog.name}无法控制地挺起胸膛往嘴边送，整个乳房在反复的吸吮中微微颤动着。`,
+    `先用舌面大范围地舔过整片乳晕让皮肤变得湿润敏感，然后对准挺立的乳尖猛地一吸，第一口奶水的量大到差点呛住，温热黏稠的液体灌满了口腔，${dog.name}发出了一声高亢的叫声，被吸住的乳头在嘴里跳动着不停地往外泌乳，像是打开了什么再也关不上的阀门。`,
+  ];
+  const MILK_DRINK_DIALOGUE_HIGH=[
+    '"主人……喝吧……奶水都是主人的……♡"',
+    '"嗯啊……被吸走了……奶好多……停不下来……♡"',
+    '"主人喜欢喝吗……还有好多……使劲吸……♡"',
+    '"呜♡……那边也涨了……主人也帮那边吸一下嘛……"',
+    '"每次被主人吸奶都好舒服……身体酥酥麻麻的……♡"',
+  ];
+  const MILK_DRINK_DIALOGUE_LOW=[
+    '"不……不要吸……那里……啊……！"',
+    '"住手……胸口好胀……你把它们都吸走了……！"',
+    '"呜啊……不要再吸了……乳头要被拽掉了……"',
+    '"疼……好酸……求你松嘴……呜……"',
+    '"那里……不是给你喝的……你放开……！"',
+  ];
+  room.log.push(pick(MILK_DRINK_TEXTS));
+  room.log.push(`<span class="dialogue">${dog.stats.obedience>50?pick(MILK_DRINK_DIALOGUE_HIGH):pick(MILK_DRINK_DIALOGUE_LOW)}</span>`);
   let effects={};getStatKeysForDog(dog).forEach(k=>effects[k]=0);
   effects.nipple=randInt(4,8);
   if(dog.owned)dog.affection=Math.min(100,(dog.affection||0)+2);
@@ -1243,8 +1532,19 @@ function doTraining(rid,toolId,targetPart){
     if(dog.stats.obedience<20&&!dog.eagleBroken)effects.obedience=(effects.obedience||0)-randInt(1,2);
   }
 
-  // Gag check for ball_gag / ring_gag
-  if(toolId==='ring_gag'||toolId==='ball_gag'){dog.hasGag=toolId;}
+  // Gag check for ball_gag / ring_gag - toggle on/off
+  if(toolId==='ring_gag'||toolId==='ball_gag'){
+    if(dog.hasGag===toolId){
+      dog.hasGag=false;
+      if(!room.log)room.log=[];
+      room.log.push(`取下了${dog.name}嘴里的${toolId==='ring_gag'?'口枷':'口球'}。`);
+      room.log.push(`<span class="dialogue">${dog.stats.obedience>50?'"嘴巴……终于能合上了……"':'"呸……总算把那破东西拿掉了……"'}</span>`);
+      if(!dog._actions)dog._actions=[];dog._actions.push({action:'remove_'+toolId,time:formatTime(),day:gameState.day});
+      advanceTime(5);renderTrainingLog(room);openTrainingPanel(rid);renderRooms();autoSave();return;
+    } else {
+      dog.hasGag=toolId;
+    }
+  }
 
   applyEffects(dog,effects,room);
 
@@ -1266,6 +1566,12 @@ function doTraining(rid,toolId,targetPart){
   else if(toolId==='plug')room.log.push(`<span class="dialogue">${dog.stats.obedience>50?'"嗯……塞进来了……好满……♡"':'"太粗了……进不去……呜……屁股要裂开了……！"'}</span>`);
   else room.log.push(`<span class="dialogue">${getDogReactionLine(dog)}</span>`);
   if(room.log.length>60)room.log=room.log.slice(-60);
+
+  // Track return dog play counts
+  if(dog.isReturnDog&&toolId.startsWith('hand_')){
+    const part=toolId.replace('hand_','');
+    if(part===dog.returnPlayPart)dog.returnPlayDone=(dog.returnPlayDone||0)+1;
+  }
 
   if(!dog._actions)dog._actions=[];
   dog._actions.push({action:toolId,target:targetPart,time:formatTime(),day:gameState.day});
@@ -1297,14 +1603,53 @@ function useFacility(rid,fid){
 
 function equipItem(rid,toolId){
   const room=gameState.rooms.find(r=>r.id===rid);if(!room?.dog)return;
-  if(!room.dog.equippedItems)room.dog.equippedItems=[];
+  const dog=room.dog;
+  if(!dog.equippedItems)dog.equippedItems=[];
+  if(!dog._equipTargets)dog._equipTargets={};
+  const item=getShopItemById(toolId);
+
+  // Check if milker can be equipped: only with cowgirl costume and canMilk
+  if(toolId==='milker'&&!(dog.canMilk&&dog.costume==='cowgirl')){
+    showToast('吸奶器只能在穿着奶牛装且有产奶能力的情况下佩戴！');return;
+  }
+
   const allEq=[];gameState.rooms.forEach(r=>{if(r.occupied&&r.dog?.equippedItems)r.dog.equippedItems.forEach(e=>allEq.push(e));});
   if(gameState.inventory.filter(i=>i.id===toolId).length-allEq.filter(e=>e===toolId).length<=0){showToast('没有多余的该道具！');return;}
-  room.dog.equippedItems.push(toolId);
-  if(!room.log)room.log=[];room.log.push(`将 ${getItemById(toolId)?.name} 装配在了 ${room.dog.name} 身上。`);
-  room.log.push(`<span class="dialogue">${getDogReactionLine(room.dog)}</span>`);
-  if(getShopItemById(toolId)?.insertable)room.dog.stats.addiction=Math.min(100,(room.dog.stats.addiction||0)+1);
-  if(!room.dog._actions)room.dog._actions=[];room.dog._actions.push({action:'equip_'+toolId,time:formatTime(),day:gameState.day});
+
+  // If insertable, ask for target
+  if(item?.insertable){
+    const hasPussy=dog.type==='双性'||dog.grewPussy;
+    let acts=`<button class="btn btn-primary btn-sm" onclick="doEquipWithTarget(${rid},'${toolId}','hole')">🍑 插入后穴</button>`;
+    if(hasPussy)acts+=`<button class="btn btn-primary btn-sm" onclick="doEquipWithTarget(${rid},'${toolId}','pussy')">🌸 插入小穴</button>`;
+    acts+=`<button class="btn btn-secondary btn-sm" onclick="closeModal()">取消</button>`;
+    document.getElementById('modalTitle').textContent='📌 选择装配位置';
+    document.getElementById('modalDesc').textContent=`将 ${item.name} 装配在 ${dog.name} 的哪个部位？`;
+    document.getElementById('modalActions').innerHTML=acts;
+    document.getElementById('itemModal').classList.add('active');
+    return;
+  }
+
+  // Non-insertable items directly equip
+  dog.equippedItems.push(toolId);
+  if(!room.log)room.log=[];room.log.push(`将 ${item?.name} 装配在了 ${dog.name} 身上。`);
+  room.log.push(`<span class="dialogue">${getDogReactionLine(dog)}</span>`);
+  if(!dog._actions)dog._actions=[];dog._actions.push({action:'equip_'+toolId,time:formatTime(),day:gameState.day});
+  openTrainingPanel(rid);autoSave();
+}
+
+function doEquipWithTarget(rid,toolId,target){
+  closeModal();
+  const room=gameState.rooms.find(r=>r.id===rid);if(!room?.dog)return;
+  const dog=room.dog;
+  if(!dog.equippedItems)dog.equippedItems=[];
+  if(!dog._equipTargets)dog._equipTargets={};
+  dog.equippedItems.push(toolId);
+  dog._equipTargets[toolId]=target;
+  if(!room.log)room.log=[];
+  room.log.push(`将 ${getItemById(toolId)?.name} 插入了 ${dog.name} 的${target==='hole'?'后穴':'小穴'}并固定。`);
+  room.log.push(`<span class="dialogue">${getDogReactionLine(dog)}</span>`);
+  dog.stats.addiction=Math.min(100,(dog.stats.addiction||0)+1);
+  if(!dog._actions)dog._actions=[];dog._actions.push({action:'equip_'+toolId+'_'+target,time:formatTime(),day:gameState.day});
   openTrainingPanel(rid);autoSave();
 }
 
@@ -1330,6 +1675,8 @@ function closeSexModal(){document.getElementById('sexModal').classList.remove('a
 function doSex(part){
   const room=gameState.rooms.find(r=>r.id===gameState.activeRoomId);if(!room?.occupied)return;
   const dog=room.dog;dog.hasBeenFucked=true;
+  if(dog.keepVirginity)checkAchievement('violated_virgin');
+  if(dog.isReturnDog)dog.returnSexDone=(dog.returnSexDone||0)+1;
   let effects={};getStatKeysForDog(dog).forEach(k=>effects[k]=0);
   effects.addiction=2;
   if(part==='hole'){effects.hole=randInt(5,10);effects.obedience=dog.stats.obedience<30&&!dog.eagleBroken?-randInt(2,5):randInt(3,6);effects.nipple=randInt(1,3);effects.cock=randInt(2,5);}
@@ -1383,28 +1730,31 @@ function doOral(){
   if(!room.log)room.log=[];
 
   if(lowObe&&!hasGag){
-    // Bite scenario
     room.log.push(pick(ORAL_LOW));
     room.log.push(`<span class="dialogue">"呸！我咬死你！"</span>`);
     effects.obedience=-randInt(3,6);
   } else if(hasGag){
-    // Forced with gag
     room.log.push(pick(ORAL_GAG));
     room.log.push(pick(ORAL_FORCE));
-    // Cum in throat = increase thirst
     room.log.push(pick(ORAL_CUM));
     dog.thirst=Math.min(100,dog.thirst+15);
     effects.oral+=randInt(2,4);
     effects.addiction+=1;
   } else if(dog.stats.obedience>=60){
-    // Willing
     room.log.push(pick(ORAL_HIGH));
     room.log.push(`<span class="dialogue">${dog.stats.obedience>75?'"主人的味道……好喜欢……♡ 还想要更多……"':'"嗯……我会好好含着的……"'}</span>`);
     effects.oral+=randInt(2,4);
+    dog.thirst=Math.min(100,dog.thirst+15);
+    room.log.push(pick(ORAL_CUM));
   } else {
-    // Mid
     room.log.push(pick(ORAL_MID));
     room.log.push(`<span class="dialogue">"唔……好大……嘴巴快合不上了……"</span>`);
+    dog.thirst=Math.min(100,dog.thirst+10);
+  }
+
+  // Track for return dog
+  if(dog.isReturnDog){
+    // oral counts towards play if target is oral-related
   }
 
   if(room.log.length>60)room.log=room.log.slice(-60);
@@ -1454,6 +1804,9 @@ function finishEagle(stop){
   if(stop){
     dog.eagleBroken=true;dog.eagleActive=false;
     dog.stats.obedience=Math.min(100,(dog.stats.obedience||0)+randInt(15,25));
+    if(!gameState.stats)gameState.stats={};
+    gameState.stats.eagleSuccess=(gameState.stats.eagleSuccess||0)+1;
+    if(gameState.stats.eagleSuccess>=5)checkAchievement('eagle_master');
     if(!room.log)room.log=[];room.log.push(`${dog.name}被放出来时浑身发抖，眼神中满是畏惧和顺从。此后再也不敢反抗。`);
     showToast(`${dog.name} 已被驯服！`);
   } else {
@@ -1495,6 +1848,47 @@ function closeTrainingPanel(){
 function tryCompleteTraining(){
   if(gameState.activeRoomId===null)return;const room=gameState.rooms.find(r=>r.id===gameState.activeRoomId);if(!room?.occupied)return;
   const dog=room.dog;if(dog.owned){showToast('已买下的狗无需交付。');return;}
+
+  if(!gameState.stats)gameState.stats={successStreak:0,totalSuccess:0,totalFail:0};
+
+  // Return dog special completion logic
+  if(dog.isReturnDog){
+    const sexMet=(dog.returnSexDone||0)>=(dog.returnSexTarget||0);
+    const playMet=(dog.returnPlayDone||0)>=(dog.returnPlayTarget||0);
+    const allMet=sexMet&&playMet;
+
+    const histEntry={name:dog.name,type:dog.type,star:dog._star||2,ownerName:dog.name+'（自来）',target:{sex:dog.returnSexTarget,play:dog.returnPlayTarget},finalStats:{...dog.stats},success:allMet,actions:dog._actions||[],date:`第${gameState.day}天`,isReturn:true};
+    if(!gameState.history)gameState.history=[];gameState.history.push(histEntry);
+
+    if(!allMet){
+      gameState.reputation=Math.max(0,gameState.reputation-5);
+      gameState.stats.successStreak=0;gameState.stats.totalFail++;
+      if(dog.equippedItems)dog.equippedItems.forEach(e=>gameState.inventory.push({id:e}));
+      room.occupied=false;room.dog=null;room.log=[];closeTrainingPanel();
+      renderRooms();renderStatusBar();renderLobby();renderInventory();autoSave();
+      document.getElementById('completeTitle').textContent='💢 未完成';
+      document.getElementById('completeRewards').innerHTML=`${dog.name}看起来很失望。<br>⭐ 声望 <span style="color:var(--danger);">-5</span>`;
+      document.getElementById('completeOverlay').classList.add('active');return;
+    }
+
+    const gold=dog._previewGold||200,exp=dog._previewExp||10;
+    gameState.gold+=gold;gameState.exp+=exp;gameState.reputation=Math.min(100,gameState.reputation+1);
+    gameState.stats.successStreak++;gameState.stats.totalSuccess++;
+    gameState.stats.returnDogCompleted=(gameState.stats.returnDogCompleted||0)+1;
+    checkLevelUp();checkAchievement('first_blood');
+    if(gameState.stats.successStreak>=10)checkAchievement('ten_streak');
+    if(gameState.stats.totalSuccess>=100)checkAchievement('hundred_wins');
+    if(gameState.stats.returnDogCompleted>=3)checkAchievement('return_dog_3');
+
+    if(dog.equippedItems)dog.equippedItems.forEach(e=>gameState.inventory.push({id:e}));
+    room.occupied=false;room.dog=null;room.log=[];closeTrainingPanel();
+    renderRooms();renderStatusBar();renderLobby();renderInventory();autoSave();
+    document.getElementById('completeTitle').textContent='✨ 调教完成';
+    document.getElementById('completeRewards').innerHTML=`<div style="color:#e8a;font-style:italic;margin-bottom:8px;">${pick(RETURN_DOG_LEAVE)}</div>💰 +<span>${gold}</span><br>⚡ +<span>${exp}</span><br>⭐ +<span>1</span>`;
+    document.getElementById('completeOverlay').classList.add('active');
+    checkAutoAchievements();return;
+  }
+
   let allMet=true;Object.entries(dog.target).forEach(([k,v])=>{if((dog.stats[k]||0)<v)allMet=false;});
   const violated=dog.keepVirginity&&dog.hasBeenFucked;
   const histEntry={name:dog.name,type:dog.type,star:dog._star,ownerName:dog.ownerName,target:{...dog.target},finalStats:{...dog.stats},success:allMet&&!violated,actions:dog._actions||[],date:`第${gameState.day}天`};
@@ -1502,6 +1896,8 @@ function tryCompleteTraining(){
 
   if(!allMet||violated){
     gameState.reputation=Math.max(0,gameState.reputation-5);
+    gameState.stats.successStreak=0;gameState.stats.totalFail++;
+    checkAchievement('first_fail');
     if(dog.equippedItems)dog.equippedItems.forEach(e=>gameState.inventory.push({id:e}));
     room.occupied=false;room.dog=null;room.log=[];closeTrainingPanel();
     renderRooms();renderStatusBar();renderLobby();renderInventory();autoSave();
@@ -1510,13 +1906,19 @@ function tryCompleteTraining(){
     document.getElementById('completeOverlay').classList.add('active');return;
   }
   const gold=dog._previewGold||100,exp=dog._previewExp||10;
-  gameState.gold+=gold;gameState.exp+=exp;gameState.reputation=Math.min(100,gameState.reputation+1);checkLevelUp();
+  gameState.gold+=gold;gameState.exp+=exp;gameState.reputation=Math.min(100,gameState.reputation+1);
+  gameState.stats.successStreak++;gameState.stats.totalSuccess++;
+  checkLevelUp();checkAchievement('first_blood');
+  if(gameState.stats.successStreak>=10)checkAchievement('ten_streak');
+  if(gameState.stats.totalSuccess>=100)checkAchievement('hundred_wins');
+
   if(dog.equippedItems)dog.equippedItems.forEach(e=>gameState.inventory.push({id:e}));
   room.occupied=false;room.dog=null;room.log=[];closeTrainingPanel();
   renderRooms();renderStatusBar();renderLobby();renderInventory();autoSave();
   document.getElementById('completeTitle').textContent='✨ 调教完成';
   document.getElementById('completeRewards').innerHTML=`主人非常满意。<br><br>💰 +<span>${gold}</span><br>⚡ +<span>${exp}</span><br>⭐ +<span>1</span>`;
   document.getElementById('completeOverlay').classList.add('active');
+  checkAutoAchievements();
 }
 
 function closeComplete(){document.getElementById('completeOverlay').classList.remove('active');}
@@ -1534,10 +1936,157 @@ function buyDog(cost){
   if(gameState.gold<cost){showToast('金币不足！');closeBuyModal();return;}
   const room=gameState.rooms.find(r=>r.id===gameState.activeRoomId);if(!room?.occupied)return;
   gameState.gold-=cost;room.dog.owned=true;room.dog.affection=0;room.dog.target={};
+  if(!gameState.stats)gameState.stats={};
+  gameState.stats.dogsBought=(gameState.stats.dogsBought||0)+1;
+  checkAchievement('bought_one');
+
+  // Add to history as purchased
+  const histEntry={name:room.dog.name,type:room.dog.type,star:room.dog._star||0,ownerName:'自己',target:{},finalStats:{...room.dog.stats},success:true,actions:room.dog._actions||[],date:`第${gameState.day}天`,purchased:true};
+  if(!gameState.history)gameState.history=[];gameState.history.push(histEntry);
+
   if(!room.log)room.log=[];room.log.push(`你买下了 ${room.dog.name}。从此，${room.dog.name}归你所有。`);
   room.log.push(`<span class="dialogue">"主人……从今以后我就是你的了……请好好疼爱我♡"</span>`);
   closeBuyModal();openTrainingPanel(room.id);renderRooms();renderStatusBar();autoSave();
   showToast(`${room.dog.name} 已成为你的专属！`);
+}
+
+function discardOwnedDog(){
+  if(gameState.activeRoomId===null)return;
+  const room=gameState.rooms.find(r=>r.id===gameState.activeRoomId);if(!room?.occupied||!room.dog?.owned)return;
+  if(!confirm(`确定要丢弃 ${room.dog.name}？此操作不可撤销。`))return;
+  const dog=room.dog;
+  // Save to discarded dogs for potential return
+  if(!gameState.discardedDogs)gameState.discardedDogs=[];
+  gameState.discardedDogs.push({name:dog.name,type:dog.type,height:dog.height,build:dog.build,skin:dog.skin,nipple:dog.nipple,cock:dog.cock,hole:dog.hole,pussy:dog.pussy,stats:{...dog.stats},affection:dog.affection||0,canMilk:dog.canMilk,grewPussy:dog.grewPussy,bigBreasts:dog.bigBreasts||false,eagleBroken:dog.eagleBroken});
+
+  if(!gameState.stats)gameState.stats={};
+  gameState.stats.dogsDiscarded=(gameState.stats.dogsDiscarded||0)+1;
+  checkAchievement('discarded_one');
+
+  // Update history
+  const existingHist=gameState.history.find(h=>h.name===dog.name&&h.purchased);
+  if(existingHist)existingHist.discarded=true;
+
+  if(dog.equippedItems)dog.equippedItems.forEach(e=>gameState.inventory.push({id:e}));
+  room.occupied=false;room.dog=null;room.log=[];
+  closeTrainingPanel();
+  renderRooms();renderLobby();renderInventory();autoSave();
+  showToast(`${dog.name} 已被丢弃。`);
+}
+
+function feedSpecial(){
+  if(gameState.activeRoomId===null)return;
+  const room=gameState.rooms.find(r=>r.id===gameState.activeRoomId);if(!room?.occupied)return;
+  const dog=room.dog;
+  const milkCount=gameState.inventory.filter(i=>i.id==='produced_milk').length;
+  const semenCount=gameState.inventory.filter(i=>i.id==='produced_semen').length;
+  if(milkCount===0&&semenCount===0){showToast('没有特殊食物！');return;}
+
+  let acts='';
+  if(milkCount>0)acts+=`<button class="btn btn-gold btn-sm" onclick="doFeedSpecial('produced_milk')">🥛 喂奶 (×${milkCount})</button>`;
+  if(semenCount>0)acts+=`<button class="btn btn-primary btn-sm" onclick="doFeedSpecial('produced_semen')">🫙 喂精液 (×${semenCount})</button>`;
+  acts+=`<button class="btn btn-secondary btn-sm" onclick="closeModal()">取消</button>`;
+
+  document.getElementById('modalTitle').textContent='🫗 特殊喂食';
+  document.getElementById('modalDesc').textContent=`选择要喂给 ${dog.name} 的食物：`;
+  document.getElementById('modalActions').innerHTML=acts;
+  document.getElementById('itemModal').classList.add('active');
+}
+
+function doFeedSpecial(itemId){
+  closeModal();
+  const room=gameState.rooms.find(r=>r.id===gameState.activeRoomId);if(!room?.occupied)return;
+  const dog=room.dog;
+  const idx=gameState.inventory.findIndex(i=>i.id===itemId);if(idx===-1)return;
+  const producer=gameState.inventory[idx].producedBy||'未知';
+  gameState.inventory.splice(idx,1);
+  const data=getShopItemById(itemId);if(!data)return;
+
+  if(!room.log)room.log=[];
+
+  if(itemId==='produced_milk'){
+    dog.thirst=Math.min(100,dog.thirst+100);
+    const obe=dog.stats.obedience;
+    if(obe<25)room.log.push(FEED_MILK_TEXTS.low);
+    else if(obe<50)room.log.push(FEED_MILK_TEXTS.mid_low);
+    else if(obe<70)room.log.push(FEED_MILK_TEXTS.mid);
+    else room.log.push(FEED_MILK_TEXTS.high);
+    // Check self-produced achievement
+    if(producer!==dog.name){checkAchievement('self_produced');}
+  } else if(itemId==='produced_semen'){
+    dog.thirst=Math.min(100,dog.thirst+15);
+    const obe=dog.stats.obedience;const add=dog.stats.addiction||0;
+    if(obe<30&&add<40){
+      room.log.push(FEED_SEMEN_TEXTS.low_resist);
+      // Force feed if obedience too low
+      if(obe<15){room.log.push('即使拒绝也被强行灌了下去。');dog.thirst=Math.min(100,dog.thirst+15);}
+      else{showToast(`${dog.name}拒绝食用。但精液已浪费。`);advanceTime(5);renderTrainingLog(room);openTrainingPanel(room.id);renderInventory();autoSave();return;}
+    } else if(add>=50&&obe<40){
+      room.log.push(FEED_SEMEN_TEXTS.high_add_low_ob);
+    } else if(add>=50&&obe>=40){
+      room.log.push(FEED_SEMEN_TEXTS.high_ob_high_add);
+    } else {
+      room.log.push(FEED_SEMEN_TEXTS.high_ob);
+    }
+    if(producer!==dog.name){checkAchievement('self_produced');}
+  }
+
+  if(!dog._actions)dog._actions=[];dog._actions.push({action:'feed_special_'+itemId,time:formatTime(),day:gameState.day});
+  advanceTime(10);renderTrainingLog(room);openTrainingPanel(room.id);renderInventory();autoSave();
+}
+
+function checkAchievement(id){
+  if(!gameState.achievements)gameState.achievements={};
+  if(gameState.achievements[id])return false;
+  const def=ACHIEVEMENTS_DEF.find(a=>a.id===id);if(!def)return false;
+  gameState.achievements[id]=true;
+  gameState.gold+=(def.reward||200);
+  showToast(`🏆 成就解锁：${def.name}！+${def.reward||200}💰`);
+  autoSave();
+  return true;
+}
+
+function checkAutoAchievements(){
+  if(!gameState.stats)return;
+  const s=gameState.stats;
+  if(s.totalSuccess>=1)checkAchievement('first_blood');
+  if(s.totalFail>=1)checkAchievement('first_fail');
+  if(s.successStreak>=10)checkAchievement('ten_streak');
+  if(s.totalSuccess>=100)checkAchievement('hundred_wins');
+  if(s.milkSold>=1||s.semenSold>=1)checkAchievement('side_hustle');
+  if(s.milkSold>=100)checkAchievement('dairy_farm');
+  if(s.semenSold>=100)checkAchievement('not_a_drop');
+  if(s.dogsBought>=1)checkAchievement('bought_one');
+  if(s.dogsDiscarded>=1)checkAchievement('discarded_one');
+  if(s.returnDogCompleted>=3)checkAchievement('return_dog_3');
+  if(s.eagleSuccess>=5)checkAchievement('eagle_master');
+  if(s.pussyDrugUsed>=3)checkAchievement('dual_nature');
+  if(gameState.rooms.length>=5)checkAchievement('five_rooms');
+
+  // Check buy_all achievements
+  const allToolIds=SHOP_ITEMS.tools.map(i=>i.id);
+  const allCostumeIds=SHOP_ITEMS.costumes.map(i=>i.id);
+  const allFacilityIds=SHOP_ITEMS.facility.map(i=>i.id);
+  const allDrugIds=SHOP_ITEMS.drugs.map(i=>i.id);
+  if(allToolIds.every(id=>s.toolsBought?.has?.(id)||[...(s.toolsBought||[])].includes(id)))checkAchievement('buy_all_tools');
+  if(allCostumeIds.every(id=>s.costumesBought?.has?.(id)||[...(s.costumesBought||[])].includes(id)))checkAchievement('buy_all_costumes');
+  if(allFacilityIds.every(id=>s.facilityBought?.has?.(id)||[...(s.facilityBought||[])].includes(id)))checkAchievement('buy_all_facility');
+  if(allDrugIds.every(id=>s.drugsBought?.has?.(id)||[...(s.drugsBought||[])].includes(id)))checkAchievement('buy_all_drugs');
+
+  // No food/water true ending
+  if(!s.everBoughtFood&&!s.everBoughtWater&&gameState.reputation>=100&&gameState.level>=4)checkAchievement('top_scrooge');
+
+  // Max affection
+  gameState.rooms.forEach(r=>{if(r.occupied&&r.dog?.owned&&(r.dog.affection||0)>=100)checkAchievement('max_affection');});
+
+  // Milk and semen stock
+  const milkStock=gameState.inventory.filter(i=>i.id==='produced_milk').length;
+  const semenStock=gameState.inventory.filter(i=>i.id==='produced_semen').length;
+  if(milkStock>=10&&semenStock>=10)checkAchievement('milk_and_semen');
+
+  // All achievements except all_achievements
+  const otherIds=ACHIEVEMENTS_DEF.filter(a=>a.id!=='all_achievements').map(a=>a.id);
+  if(otherIds.every(id=>gameState.achievements[id]))checkAchievement('all_achievements');
 }
 
 function renderInventory(){
@@ -1555,7 +2104,7 @@ function renderInventory(){
 
 function showItemDetail(id){
   const item=getShopItemById(id);if(!item)return;const count=gameState.inventory.filter(i=>i.id===id).length;
-  const sp=Math.floor(item.price/2);const isFac=getShopCategory(id)==='facility';
+  const sp=item.produced?item.price:Math.floor(item.price/2);const isFac=getShopCategory(id)==='facility';
   document.getElementById('modalTitle').innerHTML=`${item.icon} ${item.name}${count>1?` ×${count}`:''}`;
   document.getElementById('modalDesc').textContent=item.desc;
   let a='';if(isFac)a+=`<button class="btn btn-primary btn-sm" onclick="openFacilityInstall('${id}')">安装</button>`;
@@ -1587,7 +2136,16 @@ function doFacilityInstall(id,roomId){
   closeFacilityInstall();renderInventory();renderRooms();autoSave();showToast(`已安装到调教室 ${roomId+1}。`);
 }
 
-function sellItem(id){const i=gameState.inventory.findIndex(x=>x.id===id);if(i===-1)return;const it=getShopItemById(id);gameState.inventory.splice(i,1);gameState.gold+=Math.floor(it.price/2);renderInventory();renderStatusBar();closeModal();autoSave();}
+function sellItem(id){
+  const i=gameState.inventory.findIndex(x=>x.id===id);if(i===-1)return;const it=getShopItemById(id);
+  gameState.inventory.splice(i,1);
+  const sellPrice=it.produced?it.price:Math.floor(it.price/2);
+  gameState.gold+=sellPrice;
+  if(!gameState.stats)gameState.stats={};
+  if(id==='produced_milk'){gameState.stats.milkSold=(gameState.stats.milkSold||0)+1;checkAchievement('side_hustle');if(gameState.stats.milkSold>=100)checkAchievement('dairy_farm');}
+  if(id==='produced_semen'){gameState.stats.semenSold=(gameState.stats.semenSold||0)+1;checkAchievement('side_hustle');if(gameState.stats.semenSold>=100)checkAchievement('not_a_drop');}
+  renderInventory();renderStatusBar();closeModal();autoSave();
+}
 function discardItem(id){const i=gameState.inventory.findIndex(x=>x.id===id);if(i===-1)return;gameState.inventory.splice(i,1);renderInventory();closeModal();autoSave();}
 function closeModal(){document.getElementById('itemModal').classList.remove('active');}
 
@@ -1611,22 +2169,96 @@ function renderShop(){
     le.appendChild(d);
   });
 }
-function buyItem(id){const it=getShopItemById(id);if(!it)return;if(gameState.gold<it.price){showToast('金币不足！');return;}gameState.gold-=it.price;gameState.inventory.push({id});renderStatusBar();renderInventory();autoSave();showToast(`购买了 ${it.name}！`);}
+function buyItem(id){
+  const it=getShopItemById(id);if(!it)return;if(gameState.gold<it.price){showToast('金币不足！');return;}
+  gameState.gold-=it.price;gameState.inventory.push({id});
+  if(!gameState.stats)gameState.stats={};
+  const cat=getShopCategory(id);
+  if(cat==='tools'){if(!gameState.stats.toolsBought)gameState.stats.toolsBought=new Set();if(typeof gameState.stats.toolsBought==='object'&&!gameState.stats.toolsBought.has)gameState.stats.toolsBought=new Set();gameState.stats.toolsBought.add(id);}
+  if(cat==='costumes'){if(!gameState.stats.costumesBought)gameState.stats.costumesBought=new Set();if(typeof gameState.stats.costumesBought==='object'&&!gameState.stats.costumesBought.has)gameState.stats.costumesBought=new Set();gameState.stats.costumesBought.add(id);}
+  if(cat==='facility'){if(!gameState.stats.facilityBought)gameState.stats.facilityBought=new Set();if(typeof gameState.stats.facilityBought==='object'&&!gameState.stats.facilityBought.has)gameState.stats.facilityBought=new Set();gameState.stats.facilityBought.add(id);}
+  if(cat==='drugs'){if(!gameState.stats.drugsBought)gameState.stats.drugsBought=new Set();if(typeof gameState.stats.drugsBought==='object'&&!gameState.stats.drugsBought.has)gameState.stats.drugsBought=new Set();gameState.stats.drugsBought.add(id);}
+  if(cat==='consumables'){if(it.feedType==='food')gameState.stats.everBoughtFood=true;if(it.feedType==='water')gameState.stats.everBoughtWater=true;}
+  checkAutoAchievements();
+  renderStatusBar();renderInventory();autoSave();showToast(`购买了 ${it.name}！`);
+}
 
 function renderHistory(){
   const el=document.getElementById('historyList');
-  if(!gameState.history?.length){el.innerHTML='<p style="color:var(--text-dim);font-size:12px;">尚无历史记录。</p>';return;}
-  el.innerHTML=gameState.history.map((h,i)=>`<div class="history-entry" onclick="openHistoryDetail(${i})">
-    <div class="he-name">${h.name} (${h.type}) ${'⭐'.repeat(h.star||1)}</div>
-    <div class="he-info">${h.date} · 主人：${h.ownerName}</div>
-    <div class="he-status ${h.success?'he-success':'he-fail'}">${h.success?'✅ 成功':'❌ 失败'}</div>
-  </div>`).reverse().join('');
+  if(!gameState.history?.length&&!ACHIEVEMENTS_DEF.length){el.innerHTML='<p style="color:var(--text-dim);font-size:12px;">尚无历史记录。</p>';return;}
+
+  const normalEntries=gameState.history?.filter(h=>!h.purchased&&!h.isReturn)||[];
+  const purchasedEntries=gameState.history?.filter(h=>h.purchased)||[];
+  const returnEntries=gameState.history?.filter(h=>h.isReturn)||[];
+
+  let html='';
+
+  // Achievements section
+  html+=`<div style="margin-bottom:16px;"><div style="font-size:14px;font-weight:700;color:var(--accent-gold);margin-bottom:8px;">🏆 成就 (${Object.keys(gameState.achievements||{}).length}/${ACHIEVEMENTS_DEF.length})</div><div style="max-height:300px;overflow-y:auto;border:1px solid var(--border-color);border-radius:8px;padding:8px;">`;
+  ACHIEVEMENTS_DEF.forEach(a=>{
+    const unlocked=gameState.achievements?.[a.id];
+    html+=`<div style="background:${unlocked?'rgba(212,168,67,0.08)':'var(--bg-primary)'};border:1px solid ${unlocked?'var(--accent-gold)':'var(--border-color)'};border-radius:8px;padding:8px;margin-bottom:6px;cursor:pointer;opacity:${unlocked?1:0.5};" onclick="clickAchievement('${a.id}')">
+      <div style="font-size:12px;font-weight:700;color:${unlocked?'var(--accent-gold)':'var(--text-dim)'};">${unlocked?'✅ ':''} ${a.name}</div>
+      ${unlocked?`<div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">${a.hidden_text}</div><div style="font-size:10px;color:var(--text-dim);margin-top:2px;">条件：${a.desc}</div>`:`<div style="font-size:10px;color:var(--text-dim);margin-top:2px;">???</div>`}
+    </div>`;
+  });
+  html+=`</div></div>`;
+
+  // Normal orders
+  if(normalEntries.length>0){
+    html+=`<div style="margin-bottom:16px;"><div style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:8px;">📋 调教记录 (${normalEntries.length})</div><div style="max-height:250px;overflow-y:auto;border:1px solid var(--border-color);border-radius:8px;padding:8px;">`;
+    normalEntries.slice().reverse().forEach((h,ri)=>{
+      const i=gameState.history.indexOf(h);
+      html+=`<div class="history-entry" onclick="openHistoryDetail(${i})"><div class="he-name">${h.name} (${h.type}) ${'⭐'.repeat(h.star||1)}</div><div class="he-info">${h.date} · 主人：${h.ownerName}${h.note?' · '+h.note:''}</div><div class="he-status ${h.success?'he-success':'he-fail'}">${h.success?'✅ 成功':'❌ 失败'}</div></div>`;
+    });
+    html+=`</div></div>`;
+  }
+
+  // Purchased
+  if(purchasedEntries.length>0){
+    html+=`<div style="margin-bottom:16px;"><div style="font-size:14px;font-weight:700;color:#e8a;margin-bottom:8px;">💖 已购入 (${purchasedEntries.length})</div><div style="max-height:200px;overflow-y:auto;border:1px solid #5a3860;border-radius:8px;padding:8px;">`;
+    purchasedEntries.slice().reverse().forEach(h=>{
+      const i=gameState.history.indexOf(h);
+      // Find current room data for live update
+      const liveRoom=gameState.rooms.find(r=>r.occupied&&r.dog?.name===h.name&&r.dog?.owned);
+      const liveStats=liveRoom?{...liveRoom.dog.stats}:h.finalStats;
+      html+=`<div class="history-entry" onclick="openHistoryDetail(${i})"><div class="he-name">💖 ${h.name} (${h.type})</div><div class="he-info">${h.date}${h.discarded?' · <span style="color:var(--danger);">已丢弃</span>':''}</div><div class="he-status he-success">已购入</div></div>`;
+    });
+    html+=`</div></div>`;
+  }
+
+  // Return dogs
+  if(returnEntries.length>0){
+    html+=`<div style="margin-bottom:16px;"><div style="font-size:14px;font-weight:700;color:#aae;margin-bottom:8px;">🔄 回归记录 (${returnEntries.length})</div><div style="max-height:200px;overflow-y:auto;border:1px solid var(--border-color);border-radius:8px;padding:8px;">`;
+    returnEntries.slice().reverse().forEach(h=>{
+      const i=gameState.history.indexOf(h);
+      html+=`<div class="history-entry" onclick="openHistoryDetail(${i})"><div class="he-name">🔄 ${h.name} (${h.type})</div><div class="he-info">${h.date}</div><div class="he-status ${h.success?'he-success':'he-fail'}">${h.success?'✅ 完成':'❌ 未完成'}</div></div>`;
+    });
+    html+=`</div></div>`;
+  }
+
+  el.innerHTML=html||'<p style="color:var(--text-dim);font-size:12px;">尚无历史记录。</p>';
+}
+
+function clickAchievement(id){
+  if(id==='careful_eye'){
+    if(checkAchievement('careful_eye')){
+      renderHistory();
+    }
+    return;
+  }
 }
 
 function openHistoryDetail(idx){
   const h=gameState.history[idx];if(!h)return;
   const keys=h.type==='双性'?['obedience','nipple','cock','hole','pussy','addiction','masochism','oral']:['obedience','nipple','cock','hole','addiction','masochism','oral'];
-  let statsHtml=keys.map(k=>`<div style="font-size:11px;">${statLabel(k)}: ${h.finalStats[k]||0}${h.target[k]?'/'+h.target[k]:''} ${h.target[k]&&(h.finalStats[k]||0)>=h.target[k]?'✅':''}</div>`).join('');
+  // For purchased dogs, try to get live stats
+  let displayStats=h.finalStats;
+  if(h.purchased){
+    const liveRoom=gameState.rooms.find(r=>r.occupied&&r.dog?.name===h.name&&r.dog?.owned);
+    if(liveRoom)displayStats={...liveRoom.dog.stats};
+  }
+  let statsHtml=keys.map(k=>`<div style="font-size:11px;">${statLabel(k)}: ${displayStats[k]||0}${h.target[k]?'/'+h.target[k]:''} ${h.target[k]&&(displayStats[k]||0)>=h.target[k]?'✅':''}</div>`).join('');
   let actionsHtml=h.actions?.length?h.actions.map(a=>`<div style="font-size:10px;color:var(--text-dim);">第${a.day}天 ${a.time} - ${a.action}${a.target?' ('+a.target+')':''}</div>`).join(''):'<div style="font-size:10px;color:var(--text-dim);">无操作记录</div>';
 
   document.getElementById('historyDetailContent').innerHTML=`
@@ -1708,17 +2340,63 @@ function renderSettings(){
   if(gameState.apiConfig){
     document.getElementById('apiUrl').value=gameState.apiConfig.url||'';
     document.getElementById('apiKey').value=gameState.apiConfig.key||'';
+    document.getElementById('apiConfigName').value='';
     document.getElementById('apiStatus').textContent=gameState.apiConfig.model?`已选择模型：${gameState.apiConfig.model}`:'未连接';
   }
+  renderSavedApiList();
+}
+
+function renderSavedApiList(){
+  const el=document.getElementById('savedApiList');if(!el)return;
+  const configs=gameState.apiConfig?.savedConfigs||[];
+  if(!configs.length){el.innerHTML='<div style="font-size:11px;color:var(--text-dim);">暂无保存的配置</div>';return;}
+  el.innerHTML=configs.map((c,i)=>`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--border-color);">
+    <span style="flex:1;font-size:12px;color:var(--text-secondary);cursor:pointer;" onclick="loadApiConfig(${i})">${c.name||'未命名'}</span>
+    <button class="btn btn-sm btn-secondary" style="padding:2px 6px;font-size:10px;" onclick="renameApiConfig(${i})">改名</button>
+    <button class="btn btn-sm btn-danger" style="padding:2px 6px;font-size:10px;" onclick="deleteApiConfig(${i})">删除</button>
+  </div>`).join('');
 }
 
 function changeFontSize(d){gameState.fontSize=Math.max(10,Math.min(22,gameState.fontSize+d));document.body.style.fontSize=gameState.fontSize+'px';document.getElementById('fontSizeDisplay').textContent=gameState.fontSize;autoSave();}
 
 function saveApiConfig(){
-  if(!gameState.apiConfig)gameState.apiConfig={};
-  gameState.apiConfig.url=document.getElementById('apiUrl').value.replace(/\/$/,'');
-  gameState.apiConfig.key=document.getElementById('apiKey').value;
-  autoSave();showToast('API配置已保存。');
+  if(!gameState.apiConfig)gameState.apiConfig={url:'',key:'',model:'',savedConfigs:[]};
+  const url=document.getElementById('apiUrl').value.replace(/\/$/,'');
+  const key=document.getElementById('apiKey').value;
+  const name=document.getElementById('apiConfigName').value||'配置'+(gameState.apiConfig.savedConfigs?.length+1||1);
+  gameState.apiConfig.url=url;
+  gameState.apiConfig.key=key;
+  if(!gameState.apiConfig.savedConfigs)gameState.apiConfig.savedConfigs=[];
+  // Check if same url+key already saved
+  const existing=gameState.apiConfig.savedConfigs.find(c=>c.url===url&&c.key===key);
+  if(!existing){
+    gameState.apiConfig.savedConfigs.push({name,url,key});
+  } else {
+    existing.name=name;
+  }
+  renderSavedApiList();autoSave();showToast(`API配置"${name}"已保存。`);
+}
+
+function loadApiConfig(idx){
+  const cfg=gameState.apiConfig?.savedConfigs?.[idx];if(!cfg)return;
+  document.getElementById('apiUrl').value=cfg.url||'';
+  document.getElementById('apiKey').value=cfg.key||'';
+  document.getElementById('apiConfigName').value=cfg.name||'';
+  gameState.apiConfig.url=cfg.url;
+  gameState.apiConfig.key=cfg.key;
+  autoSave();showToast(`已加载配置"${cfg.name}"。`);
+}
+
+function renameApiConfig(idx){
+  const cfg=gameState.apiConfig?.savedConfigs?.[idx];if(!cfg)return;
+  const newName=prompt('输入新名称：',cfg.name);
+  if(newName&&newName.trim()){cfg.name=newName.trim();renderSavedApiList();autoSave();}
+}
+
+function deleteApiConfig(idx){
+  if(!gameState.apiConfig?.savedConfigs)return;
+  gameState.apiConfig.savedConfigs.splice(idx,1);
+  renderSavedApiList();autoSave();showToast('配置已删除。');
 }
 
 async function connectApi(){
@@ -1761,11 +2439,63 @@ function renderSaveSlots(){
   }
 }
 
-function saveToSlot(s){localStorage.setItem(`training_save_${s}`,JSON.stringify({...gameState,_saveTime:new Date().toLocaleString()}));renderSaveSlots();showToast(`已保存到存档${s+1}。`);}
-function loadSave(s){const d=localStorage.getItem(`training_save_${s}`);if(!d)return;try{const p=JSON.parse(d);delete p._saveTime;gameState=p;gameState.started=true;document.getElementById('introOverlay').classList.add('hidden');document.getElementById('gameoverOverlay').classList.remove('active');document.getElementById('completeOverlay').classList.remove('active');document.getElementById('trainingPanel').classList.remove('active');renderAll();showToast(`已读取存档${s+1}。`);}catch(e){showToast('存档损坏！');}}
+function saveToSlot(s){
+  const toSave={...gameState,_saveTime:new Date().toLocaleString()};
+  if(toSave.stats){
+    const st={...toSave.stats};
+    if(st.toolsBought instanceof Set)st.toolsBought=[...st.toolsBought];
+    if(st.costumesBought instanceof Set)st.costumesBought=[...st.costumesBought];
+    if(st.facilityBought instanceof Set)st.facilityBought=[...st.facilityBought];
+    if(st.drugsBought instanceof Set)st.drugsBought=[...st.drugsBought];
+    toSave.stats=st;
+  }
+  localStorage.setItem(`training_save_${s}`,JSON.stringify(toSave));renderSaveSlots();showToast(`已保存到存档${s+1}。`);
+}
+function loadSave(s){
+  const d=localStorage.getItem(`training_save_${s}`);if(!d)return;
+  try{
+    const p=JSON.parse(d);delete p._saveTime;gameState=p;
+    if(gameState.stats){
+      if(Array.isArray(gameState.stats.toolsBought))gameState.stats.toolsBought=new Set(gameState.stats.toolsBought);
+      if(Array.isArray(gameState.stats.costumesBought))gameState.stats.costumesBought=new Set(gameState.stats.costumesBought);
+      if(Array.isArray(gameState.stats.facilityBought))gameState.stats.facilityBought=new Set(gameState.stats.facilityBought);
+      if(Array.isArray(gameState.stats.drugsBought))gameState.stats.drugsBought=new Set(gameState.stats.drugsBought);
+    }
+    gameState.started=true;
+    document.getElementById('introOverlay').classList.add('hidden');
+    document.getElementById('gameoverOverlay').classList.remove('active');
+    document.getElementById('completeOverlay').classList.remove('active');
+    document.getElementById('trainingPanel').classList.remove('active');
+    renderAll();showToast(`已读取存档${s+1}。`);
+  }catch(e){showToast('存档损坏！');}
+}
 function deleteSave(s){localStorage.removeItem(`training_save_${s}`);renderSaveSlots();showToast(`存档${s+1}已删除。`);}
-function autoSave(){localStorage.setItem('training_autosave',JSON.stringify(gameState));}
-function loadAutoSave(){const d=localStorage.getItem('training_autosave');if(d){try{gameState=JSON.parse(d);}catch(e){}}}
+function autoSave(){
+  const toSave={...gameState};
+  if(toSave.stats){
+    const s={...toSave.stats};
+    if(s.toolsBought instanceof Set)s.toolsBought=[...s.toolsBought];
+    if(s.costumesBought instanceof Set)s.costumesBought=[...s.costumesBought];
+    if(s.facilityBought instanceof Set)s.facilityBought=[...s.facilityBought];
+    if(s.drugsBought instanceof Set)s.drugsBought=[...s.drugsBought];
+    toSave.stats=s;
+  }
+  localStorage.setItem('training_autosave',JSON.stringify(toSave));
+}
+function loadAutoSave(){
+  const d=localStorage.getItem('training_autosave');
+  if(d){
+    try{
+      gameState=JSON.parse(d);
+      if(gameState.stats){
+        if(Array.isArray(gameState.stats.toolsBought))gameState.stats.toolsBought=new Set(gameState.stats.toolsBought);
+        if(Array.isArray(gameState.stats.costumesBought))gameState.stats.costumesBought=new Set(gameState.stats.costumesBought);
+        if(Array.isArray(gameState.stats.facilityBought))gameState.stats.facilityBought=new Set(gameState.stats.facilityBought);
+        if(Array.isArray(gameState.stats.drugsBought))gameState.stats.drugsBought=new Set(gameState.stats.drugsBought);
+      }
+    }catch(e){}
+  }
+}
 
 init();
 </script>
