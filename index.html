@@ -479,7 +479,7 @@ const ACHIEVEMENTS_DEF=[
   {id:'side_hustle',name:'副业',desc:'售卖第一瓶奶或第一瓶精液。',hidden_text:'恭喜你开辟了新的商业版图。从调教师到体液贩子，职业跨度令人叹为观止。',check:null,reward:200},
   {id:'dairy_farm',name:'奶牛厂厂主',desc:'累计售卖一百瓶奶。',hidden_text:'你已经可以注册一个商标了。建议叫"鲜榨人奶"，纯天然无添加。',check:null,reward:200},
   {id:'not_a_drop',name:'一滴不剩',desc:'累计售卖一百瓶精液。',hidden_text:'一百瓶精液。你是开了个精子银行还是怎么的。',check:null,reward:200},
-  {id:'no_food_survive',name:'人不吃饭也能活对吧？',desc:'一条狗不喂任何食物和水存活十天。',hidden_text:'解锁这条成就，想必你也发现了新天地了吧？恭喜你，走上周扒皮之路！',check:null,reward:200},
+  {id:'no_food_survive',name:'人不吃饭也能活对吧？',desc:'一条狗三天内不喂任何食物、水或特殊食物，依然存活。',hidden_text:'解锁这条成就，想必你也发现了新天地了吧？恭喜你，走上周扒皮之路！',check:null,reward:200},
   {id:'breast_enhance',name:'必先利其器',desc:'给一个有奶的对象使用丰胸药。',hidden_text:'工欲善其事必先利其器。大胸才能产大奶。我吸——',check:null,reward:200},
   {id:'top_scrooge',name:'顶级周扒皮',desc:'不买商店的任何食物和水的情况下达成真结局。',hidden_text:'从头到尾没花一分钱买过食物和水。那些狗吃什么活下来的？鸡巴精液里的蛋白质和水分吗？嗯，确实够吃够喝了，营养还挺均衡。',check:null,reward:200},
   {id:'self_produced',name:'自产自销',desc:'用狗生产的精液或奶喂食其他狗。',hidden_text:'用一条狗的体液喂另一条狗。你在搞什么诡异的食物链实验？',check:null,reward:200},
@@ -874,7 +874,7 @@ function advanceTime(min){
   while(gameState.minute>=60){gameState.minute-=60;gameState.hour++;}
   while(gameState.hour>=24){gameState.hour-=24;gameState.day++;}
   const daysPassed=gameState.day-prevDay;
-  if(daysPassed>0){for(let i=0;i<daysPassed;i++)decayAllDogNeeds();}
+  if(daysPassed>0){for(let i=0;i<daysPassed;i++)decayAllDogNeeds();applySelfSustaining();}
   else{
     const hrs=Math.floor(min/60);
     if(hrs>0){
@@ -884,6 +884,7 @@ function advanceTime(min){
           room.dog.thirst=Math.max(0,room.dog.thirst-hrs*3);
         }
       });
+      applySelfSustaining();
     }
   }
   // Accumulate fractional hour progress for all equipped dogs
@@ -902,6 +903,7 @@ function advanceTime(min){
       }
     }
   });
+  processAutoFeed();
   checkDeathAll();
   renderStatusBar();
 }
@@ -922,14 +924,15 @@ function skipOneHour(){
       room.dog.hunger=Math.max(0,room.dog.hunger-2);
       room.dog.thirst=Math.max(0,room.dog.thirst-3);
       processIdleEquipment(room);
-            room.dog._minuteAccum=0;
-      // Reset daily semen counter on new day
+      room.dog._minuteAccum=0;
       if(gameState.hour===23){room.dog._semenToday=0;}
     }
   });
   gameState.minute+=60;
   while(gameState.minute>=60){gameState.minute-=60;gameState.hour++;}
   while(gameState.hour>=24){gameState.hour-=24;gameState.day++;decayAllDogNeeds();gameState.rooms.forEach(r=>{if(r.occupied&&r.dog)r.dog._semenToday=0;});}
+  applySelfSustaining();
+  processAutoFeed();
   checkDeathAll();
   renderStatusBar();
   if(gameState.activeRoomId!==null){const room=gameState.rooms.find(r=>r.id===gameState.activeRoomId);if(room?.occupied)openTrainingPanel(room.id);}
@@ -1051,7 +1054,7 @@ function checkTrueEnding(){
 function continuePlaying(){document.getElementById('gameoverOverlay').classList.remove('active');}
 
 function restartGame(){
-  gameState={started:true,day:1,hour:8,minute:0,gold:500,exp:0,level:0,reputation:5,rooms:[{id:0,occupied:false,dog:null,facilities:[],log:[]}],inventory:[],fontSize:gameState.fontSize||14,currentGuest:null,activeRoomId:null,history:gameState.history||[],apiConfig:gameState.apiConfig||{url:'',key:'',model:'',savedConfigs:[]},ownedDogs:[],achievements:gameState.achievements||{},stats:{successStreak:0,totalSuccess:0,totalFail:0,milkSold:0,semenSold:0,everBoughtFood:false,everBoughtWater:false,toolsBought:new Set(),costumesBought:new Set(),facilityBought:new Set(),drugsBought:new Set(),dogsBought:0,dogsDiscarded:0,returnDogCompleted:0,eagleSuccess:0,pussyDrugUsed:0,producedItems:[]},discardedDogs:[]};
+  gameState={started:true,day:1,hour:8,minute:0,gold:500,exp:0,level:0,reputation:5,rooms:[{id:0,occupied:false,dog:null,facilities:[],log:[]}],inventory:[],fontSize:gameState.fontSize||14,currentGuest:null,activeRoomId:null,history:[],apiConfig:gameState.apiConfig||{url:'',key:'',model:'',savedConfigs:[]},ownedDogs:[],achievements:{},stats:{successStreak:0,totalSuccess:0,totalFail:0,milkSold:0,semenSold:0,everBoughtFood:false,everBoughtWater:false,toolsBought:new Set(),costumesBought:new Set(),facilityBought:new Set(),drugsBought:new Set(),dogsBought:0,dogsDiscarded:0,returnDogCompleted:0,eagleSuccess:0,pussyDrugUsed:0,producedItems:[]},discardedDogs:[]};
   document.getElementById('gameoverOverlay').classList.remove('active');
   document.getElementById('completeOverlay').classList.remove('active');
   document.getElementById('trainingPanel').classList.remove('active');
@@ -1150,7 +1153,7 @@ function generateGuest(container){
   const previewExp=randInt(...STAR_EXP_RANGE[star]),previewGold=randInt(...STAR_GOLD_RANGE[star]);
   const stats={obedience:randInt(5,15),nipple:randInt(5,12),cock:randInt(5,12),hole:randInt(5,12),addiction:0,masochism:0,oral:randInt(3,10)};
   if(isFuta)stats.pussy=randInt(5,12);
-  const dog={name:dogName,type:dogType,height:pick(HEIGHT_POOL),build:pick(BUILD_POOL),skin:pick(SKIN_POOL),nipple:pick(NIPPLE_POOL),cock:pick(COCK_POOL),hole:pick(HOLE_POOL),pussy:isFuta?pick(PUSSY_POOL):null,stats,target,ownerName,costume:null,keepVirginity:vo.keep,hasBeenFucked:false,hunger:80,thirst:80,equippedItems:[],nippleAppearance:NIP_APP[0],cockAppearance:COCK_APP[0],holeAppearance:HOLE_APP[0],pussyAppearance:isFuta?PUSSY_APP[0]:null,addictionAppearance:ADDICT_APP[0],masochismAppearance:M_APP[0],oralAppearance:ORAL_APP[0],eagleBroken:false,eagleActive:false,eagleStart:0,eagleDuration:0,owned:false,affection:0,canMilk:false,grewPussy:false,hasGag:false,bigBreasts:false,isReturnDog:false,returnCount:0,noFeedDays:0,_equipTargets:{},_milkTimer:0,_semenTimer:0,_semenToday:0};
+  const dog={name:dogName,type:dogType,height:pick(HEIGHT_POOL),build:pick(BUILD_POOL),skin:pick(SKIN_POOL),nipple:pick(NIPPLE_POOL),cock:pick(COCK_POOL),hole:pick(HOLE_POOL),pussy:isFuta?pick(PUSSY_POOL):null,stats,target,ownerName,costume:null,keepVirginity:vo.keep,hasBeenFucked:false,hunger:80,thirst:80,equippedItems:[],nippleAppearance:NIP_APP[0],cockAppearance:COCK_APP[0],holeAppearance:HOLE_APP[0],pussyAppearance:isFuta?PUSSY_APP[0]:null,addictionAppearance:ADDICT_APP[0],masochismAppearance:M_APP[0],oralAppearance:ORAL_APP[0],eagleBroken:false,eagleActive:false,eagleStart:0,eagleDuration:0,owned:false,affection:0,canMilk:false,grewPussy:false,hasGag:false,bigBreasts:false,isReturnDog:false,returnCount:0,noFeedDays:0,_equipTargets:{},_milkTimer:0,_semenTimer:0,_semenToday:0,_lastFedDay:-1,_dayArrived:gameState.day};
   gameState.currentGuest={dog,star,reqTexts,ownerName,previewExp,previewGold,virginText:vo.text};
   const pron=ownerIsFemale?'她':'他';
   let bd=`身高 <span>${dog.height}</span><br>体型 <span>${dog.build}</span><br>肤色 <span>${dog.skin}</span><br>乳头 <span>${dog.nipple}</span><br>鸡巴 <span>${dog.cock}</span><br>后穴 <span>${dog.hole}</span>`;
@@ -1166,14 +1169,14 @@ function generateReturnDog(container,discardedInfo){
   const playPart=pick(['nipple','cock']);
   const target={};
   // Return dog uses action-count based targets instead of stat targets
-  const dog={...discardedInfo,target,ownerName:discardedInfo.name+'（自来）',keepVirginity:false,hasBeenFucked:false,hunger:80,thirst:80,equippedItems:[],eagleBroken:discardedInfo.eagleBroken||false,eagleActive:false,owned:false,affection:discardedInfo.affection||0,isReturnDog:true,returnSexTarget:sexCount,returnPlayTarget:playCount,returnPlayPart:playPart,returnSexDone:0,returnPlayDone:0,_actions:[],_equipTargets:{},_milkTimer:0,_semenTimer:0,_semenToday:0};
+  const dog={...discardedInfo,target,ownerName:discardedInfo.name+'（自来）',keepVirginity:false,hasBeenFucked:false,hunger:80,thirst:80,equippedItems:[],eagleBroken:discardedInfo.eagleBroken||false,eagleActive:false,owned:false,affection:discardedInfo.affection||0,isReturnDog:true,selfSustaining:true,returnSexTarget:sexCount,returnPlayTarget:playCount,returnPlayPart:playPart,returnSexDone:0,returnPlayDone:0,_actions:[],_equipTargets:{},_milkTimer:0,_semenTimer:0,_semenToday:0};
 
   gameState.currentGuest={dog,star:2,reqTexts:[`被操${sexCount}次`,`${statLabel(playPart)}被把玩${playCount}次`],ownerName:dog.name,previewExp,previewGold,virginText:'随便你怎么处置',isReturn:true};
 
   container.innerHTML=`<div class="guest-card" style="border-color:#e8a;"><h3>💖 ${dog.name} 自己回来了</h3>
     <div style="font-size:12px;color:#e8a;margin-bottom:8px;">${pick(RETURN_DOG_LINES)}</div>
     <div class="star-display">⭐⭐ 特殊任务（回归）</div>
-    <div class="guest-info">${dog.name}（${dog.type}${dog.grewPussy?' → 双性':''}）自行前来，要求再次接受调教。<br>身高 <span>${dog.height}</span><br>体型 <span>${dog.build}</span></div>
+    <div class="guest-info">${dog.name}（${dog.type}${dog.grewPussy?' → 双性':''}）自行前来，要求再次接受调教。<br>身高 <span>${dog.height}</span><br>体型 <span>${dog.build}</span><br><br><span style="color:var(--accent-gold);">💼 自备了充足的粮食和饮水，不需要额外照料。</span></div>
     <div class="requirement-box"><div class="requirement-title">📋 请求</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">"请操我${sexCount}次……还有${statLabel(playPart)}也想被碰${playCount}次……"</div></div>
     <div class="reward-preview">📦 完成奖励：💰${previewGold}（双倍） | ⚡${previewExp} | ⭐+1</div>
     <div class="guest-actions"><button class="btn btn-success" onclick="acceptGuest()">✅ 接单</button><button class="btn btn-danger" onclick="rejectGuest()">❌ 拒绝</button></div></div>`;
@@ -1195,6 +1198,7 @@ function renderRooms(){
     const div=document.createElement('div');div.className=`room-card ${room.occupied?'occupied':'empty'}`;
     if(room.occupied&&room.dog){
       const d=room.dog;const keys=getStatKeysForDog(d);
+      const af=d._autoFeed||{enabled:false,foodId:null,waterId:null,hungerThreshold:30,thirstThreshold:30};
       div.innerHTML=`<div class="room-status occupied">${d.owned?'永久':'调教中'}</div><div class="dog-name">🐕 ${d.name} (${d.type}${d.grewPussy?' → 双性':''}) ${d._star?'⭐'.repeat(d._star):''}</div>
         <div class="needs-bar-container"><div class="needs-row"><span style="color:var(--text-dim);">🍖</span><div class="needs-bar"><div class="needs-fill-hunger" style="width:${d.hunger}%"></div></div><span style="font-size:10px;">${d.hunger}</span></div><div class="needs-row"><span style="color:var(--text-dim);">💧</span><div class="needs-bar"><div class="needs-fill-thirst" style="width:${d.thirst}%"></div></div><span style="font-size:10px;">${d.thirst}</span></div></div>
         <div class="stat-grid">${keys.map(k=>renderStat(statLabel(k),d.stats[k],d.target[k])).join('')}</div>
@@ -1202,6 +1206,11 @@ function renderRooms(){
         ${d.costume?`<div style="font-size:11px;color:var(--accent-gold);">👗 ${getItemById(d.costume)?.name}</div>`:''}
         ${d.equippedItems?.length?`<div class="equipped-items">🔧 ${d.equippedItems.map(e=>getItemById(e)?.name).join('、')}</div>`:''}
         ${d.canMilk?'<div style="font-size:11px;color:#e8a;">🥛 可产奶</div>':''}
+        ${d.selfSustaining?'<div style="font-size:11px;color:var(--success);">💼 自带粮水（低于40自动回复）</div>':''}
+        <div style="margin-top:6px;padding:6px;background:var(--bg-primary);border-radius:6px;border:1px solid var(--border-color);">
+          <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px;">🤖 自动喂食 <button class="btn btn-sm" style="padding:1px 6px;font-size:9px;${af.enabled?'background:var(--success);color:#fff;':'background:var(--bg-tertiary);color:var(--text-dim);'}" onclick="toggleAutoFeed(${room.id})">${af.enabled?'ON':'OFF'}</button></div>
+          ${af.enabled?`<div style="font-size:10px;color:var(--text-secondary);">食物：${af.foodId?getItemById(af.foodId)?.name||'未设置':'<span style="color:var(--danger);">未设置</span>'} <button class="btn btn-sm" style="padding:1px 4px;font-size:9px;" onclick="setAutoFeedItem(${room.id},'food')">选</button> | 低于${af.hungerThreshold}时喂 <button class="btn btn-sm" style="padding:1px 4px;font-size:9px;" onclick="setAutoFeedThreshold(${room.id},'hunger')">调</button><br>水：${af.waterId?getItemById(af.waterId)?.name||'未设置':'<span style="color:var(--danger);">未设置</span>'} <button class="btn btn-sm" style="padding:1px 4px;font-size:9px;" onclick="setAutoFeedItem(${room.id},'water')">选</button> | 低于${af.thirstThreshold}时喂 <button class="btn btn-sm" style="padding:1px 4px;font-size:9px;" onclick="setAutoFeedThreshold(${room.id},'thirst')">调</button></div>`:''}
+        </div>
         <div style="margin-top:8px;display:flex;gap:6px;"><button class="btn btn-primary btn-sm" style="flex:1;" onclick="openTrainingPanel(${room.id})">进入调教</button>${d.owned?'':`<button class="btn btn-danger btn-sm" onclick="releaseDog(${room.id})">释放</button>`}</div>`;
     }else{
       div.innerHTML=`<div class="room-status free">空闲</div><div style="text-align:center;padding:20px;color:var(--text-dim);"><div style="font-size:28px;margin-bottom:6px;">🔓</div>调教室 ${idx+1}${room.facilities?.length?`<br><span style="font-size:11px;color:var(--accent-gold);">设施：${room.facilities.map(f=>getItemById(f)?.name).join('、')}</span>`:''}</div>`;
@@ -1209,6 +1218,101 @@ function renderRooms(){
     g.appendChild(div);
   });
   document.getElementById('buildCostHint').textContent=`下一间费用：${300+(gameState.rooms.length-1)*250} 金币`;
+}
+
+function toggleAutoFeed(rid){
+  const room=gameState.rooms.find(r=>r.id===rid);if(!room?.dog)return;
+  if(!room.dog._autoFeed)room.dog._autoFeed={enabled:false,foodId:null,waterId:null,hungerThreshold:30,thirstThreshold:30};
+  room.dog._autoFeed.enabled=!room.dog._autoFeed.enabled;
+  renderRooms();autoSave();
+}
+
+function setAutoFeedItem(rid,type){
+  const room=gameState.rooms.find(r=>r.id===rid);if(!room?.dog)return;
+  if(!room.dog._autoFeed)room.dog._autoFeed={enabled:false,foodId:null,waterId:null,hungerThreshold:30,thirstThreshold:30};
+  const feedType=type==='food'?'food':'water';
+  const available=[];const seen=new Set();
+  gameState.inventory.forEach(inv=>{
+    const it=getShopItemById(inv.id);
+    if(it?.feedType===feedType&&!seen.has(inv.id)){seen.add(inv.id);available.push(it);}
+  });
+  // Also check produced items
+  if(feedType==='water'){
+    if(gameState.inventory.some(i=>i.id==='produced_milk')&&!seen.has('produced_milk')){seen.add('produced_milk');available.push(PRODUCED_ITEMS.produced_milk);}
+    if(gameState.inventory.some(i=>i.id==='produced_semen')&&!seen.has('produced_semen')){seen.add('produced_semen');available.push(PRODUCED_ITEMS.produced_semen);}
+  }
+  if(!available.length){showToast(`仓库中没有可用的${type==='food'?'食物':'水'}！`);return;}
+  let acts=available.map(it=>`<button class="btn btn-sm btn-primary" style="margin:2px;" onclick="doSetAutoFeedItem(${rid},'${type}','${it.id}')">${it.icon} ${it.name}</button>`).join('');
+  acts+=`<button class="btn btn-sm btn-secondary" style="margin:2px;" onclick="doSetAutoFeedItem(${rid},'${type}',null)">清除</button>`;
+  acts+=`<button class="btn btn-sm btn-secondary" style="margin:2px;" onclick="closeModal()">取消</button>`;
+  document.getElementById('modalTitle').textContent=`选择自动喂食的${type==='food'?'食物':'饮品'}`;
+  document.getElementById('modalDesc').textContent=`为 ${room.dog.name} 选择当饱食/口渴低于阈值时自动使用的物品：`;
+  document.getElementById('modalActions').innerHTML=acts;
+  document.getElementById('itemModal').classList.add('active');
+}
+
+function doSetAutoFeedItem(rid,type,itemId){
+  closeModal();
+  const room=gameState.rooms.find(r=>r.id===rid);if(!room?.dog)return;
+  if(!room.dog._autoFeed)room.dog._autoFeed={enabled:false,foodId:null,waterId:null,hungerThreshold:30,thirstThreshold:30};
+  if(type==='food')room.dog._autoFeed.foodId=itemId;
+  else room.dog._autoFeed.waterId=itemId;
+  renderRooms();autoSave();
+  showToast(itemId?`已设置自动喂食：${getItemById(itemId)?.name}`:'已清除自动喂食设置。');
+}
+
+function setAutoFeedThreshold(rid,type){
+  const room=gameState.rooms.find(r=>r.id===rid);if(!room?.dog)return;
+  if(!room.dog._autoFeed)room.dog._autoFeed={enabled:false,foodId:null,waterId:null,hungerThreshold:30,thirstThreshold:30};
+  const current=type==='hunger'?room.dog._autoFeed.hungerThreshold:room.dog._autoFeed.thirstThreshold;
+  const val=prompt(`当${type==='hunger'?'饱食度':'口渴度'}低于多少时自动喂食？(1-80)`,current);
+  const num=parseInt(val);
+  if(isNaN(num)||num<1||num>80){showToast('请输入1到80之间的数字！');return;}
+  if(type==='hunger')room.dog._autoFeed.hungerThreshold=num;
+  else room.dog._autoFeed.thirstThreshold=num;
+  renderRooms();autoSave();
+}
+
+function applySelfSustaining(){
+  gameState.rooms.forEach(room=>{
+    if(!room.occupied||!room.dog)return;
+    const dog=room.dog;
+    if(!dog.selfSustaining)return;
+    if(dog.hunger<40)dog.hunger=Math.min(100,dog.hunger+randInt(15,25));
+    if(dog.thirst<40)dog.thirst=Math.min(100,dog.thirst+randInt(15,25));
+  });
+}
+
+function processAutoFeed(){
+  gameState.rooms.forEach(room=>{
+    if(!room.occupied||!room.dog)return;
+    const dog=room.dog;
+    const af=dog._autoFeed;
+    if(!af||!af.enabled)return;
+    if(af.foodId&&dog.hunger<af.hungerThreshold){
+      const idx=gameState.inventory.findIndex(i=>i.id===af.foodId);
+      if(idx!==-1){
+        const data=getShopItemById(af.foodId);
+        gameState.inventory.splice(idx,1);
+        dog.hunger=Math.min(100,dog.hunger+(data?.feedAmount||30));
+        dog._lastFedDay=gameState.day;
+        if(!room.log)room.log=[];
+        room.log.push(`<span style="color:var(--text-dim);">[自动喂食]</span> 自动投喂了 ${data?.name}。`);
+      }
+    }
+    if(af.waterId&&dog.thirst<af.thirstThreshold){
+      const idx=gameState.inventory.findIndex(i=>i.id===af.waterId);
+      if(idx!==-1){
+        const data=getShopItemById(af.waterId);
+        gameState.inventory.splice(idx,1);
+        dog.thirst=Math.min(100,dog.thirst+(data?.feedAmount||30));
+        dog._lastFedDay=gameState.day;
+        if(!room.log)room.log=[];
+        room.log.push(`<span style="color:var(--text-dim);">[自动喂食]</span> 自动喂了 ${data?.name}。`);
+      }
+    }
+  });
+  applySelfSustaining();
 }
 
 function renderStat(label,cur,tgt){
@@ -1237,7 +1341,6 @@ function releaseDog(rid){
   gameState.stats.totalFail=(gameState.stats.totalFail||0)+1;
   checkAchievement('first_fail');
 
-  if(dog.equippedItems)dog.equippedItems.forEach(e=>gameState.inventory.push({id:e}));
   room.occupied=false;room.dog=null;room.log=[];
   if(gameState.activeRoomId===rid){document.getElementById('trainingPanel').classList.remove('active');gameState.activeRoomId=null;}
   renderRooms();renderLobby();renderInventory();renderStatusBar();autoSave();
@@ -1829,6 +1932,7 @@ function feedDog(type){
   const dog=room.dog;
   if(type==='food')dog.hunger=Math.min(100,dog.hunger+(data.feedAmount||30));
   else dog.thirst=Math.min(100,dog.thirst+(data.feedAmount||30));
+  dog._lastFedDay=gameState.day;
   if(!room.log)room.log=[];room.log.push(`投喂了 ${data.name}。${dog.name} ${dog.stats.obedience>40||dog.eagleBroken?'乖乖地吃了下去。':'起初抗拒，最终咽了下去。'}`);
   if(!dog._actions)dog._actions=[];dog._actions.push({action:'feed_'+type,time:formatTime(),day:gameState.day});
   advanceTime(10);renderTrainingLog(room);openTrainingPanel(room.id);renderInventory();autoSave();
@@ -1863,7 +1967,6 @@ function tryCompleteTraining(){
     if(!allMet){
       gameState.reputation=Math.max(0,gameState.reputation-5);
       gameState.stats.successStreak=0;gameState.stats.totalFail++;
-      if(dog.equippedItems)dog.equippedItems.forEach(e=>gameState.inventory.push({id:e}));
       room.occupied=false;room.dog=null;room.log=[];closeTrainingPanel();
       renderRooms();renderStatusBar();renderLobby();renderInventory();autoSave();
       document.getElementById('completeTitle').textContent='💢 未完成';
@@ -1880,7 +1983,6 @@ function tryCompleteTraining(){
     if(gameState.stats.totalSuccess>=100)checkAchievement('hundred_wins');
     if(gameState.stats.returnDogCompleted>=3)checkAchievement('return_dog_3');
 
-    if(dog.equippedItems)dog.equippedItems.forEach(e=>gameState.inventory.push({id:e}));
     room.occupied=false;room.dog=null;room.log=[];closeTrainingPanel();
     renderRooms();renderStatusBar();renderLobby();renderInventory();autoSave();
     document.getElementById('completeTitle').textContent='✨ 调教完成';
@@ -1898,7 +2000,6 @@ function tryCompleteTraining(){
     gameState.reputation=Math.max(0,gameState.reputation-5);
     gameState.stats.successStreak=0;gameState.stats.totalFail++;
     checkAchievement('first_fail');
-    if(dog.equippedItems)dog.equippedItems.forEach(e=>gameState.inventory.push({id:e}));
     room.occupied=false;room.dog=null;room.log=[];closeTrainingPanel();
     renderRooms();renderStatusBar();renderLobby();renderInventory();autoSave();
     document.getElementById('completeTitle').textContent='💢 调教失败';
@@ -1912,7 +2013,6 @@ function tryCompleteTraining(){
   if(gameState.stats.successStreak>=10)checkAchievement('ten_streak');
   if(gameState.stats.totalSuccess>=100)checkAchievement('hundred_wins');
 
-  if(dog.equippedItems)dog.equippedItems.forEach(e=>gameState.inventory.push({id:e}));
   room.occupied=false;room.dog=null;room.log=[];closeTrainingPanel();
   renderRooms();renderStatusBar();renderLobby();renderInventory();autoSave();
   document.getElementById('completeTitle').textContent='✨ 调教完成';
@@ -1926,16 +2026,26 @@ function closeComplete(){document.getElementById('completeOverlay').classList.re
 function openBuyModal(){
   if(gameState.activeRoomId===null)return;const room=gameState.rooms.find(r=>r.id===gameState.activeRoomId);if(!room?.occupied)return;
   const dog=room.dog;if(dog.owned){showToast('已经是你的了！');return;}
-  const cost=(dog._previewGold||100)*10;
-  document.getElementById('buyModalDesc').innerHTML=`花费 <span style="color:var(--accent-gold);font-weight:700;">${cost} 金币</span> 买下 ${dog.name}？<br><br>买下后将永远占据一个调教室，增加好感度属性，成为你的专属。任务视为放弃（不扣声望）。`;
-  document.getElementById('buyModalActions').innerHTML=`<button class="btn btn-gold btn-sm" onclick="buyDog(${cost})">💖 买下</button><button class="btn btn-secondary btn-sm" onclick="closeBuyModal()">取消</button>`;
+  const isReturn=dog.isReturnDog;
+  const cost=isReturn?0:(dog._previewGold||100)*10;
+  if(isReturn){
+    document.getElementById('buyModalDesc').innerHTML=`${dog.name} 是自愿回来的，收留对方完全免费。<br><br>买下后将永远占据一个调教室，增加好感度属性，成为你的专属。`;
+  } else {
+    document.getElementById('buyModalDesc').innerHTML=`花费 <span style="color:var(--accent-gold);font-weight:700;">${cost} 金币</span> 买下 ${dog.name}？<br><br>买下后将永远占据一个调教室，增加好感度属性，成为你的专属。任务视为放弃（不扣声望）。`;
+  }
+  document.getElementById('buyModalActions').innerHTML=`<button class="btn btn-gold btn-sm" onclick="buyDog(${cost})">${isReturn?'💖 收留':'💖 买下'}</button><button class="btn btn-secondary btn-sm" onclick="closeBuyModal()">取消</button>`;
   document.getElementById('buyModal').classList.add('active');
 }
 function closeBuyModal(){document.getElementById('buyModal').classList.remove('active');}
 function buyDog(cost){
   if(gameState.gold<cost){showToast('金币不足！');closeBuyModal();return;}
   const room=gameState.rooms.find(r=>r.id===gameState.activeRoomId);if(!room?.occupied)return;
-  gameState.gold-=cost;room.dog.owned=true;room.dog.affection=0;room.dog.target={};
+  gameState.gold-=cost;room.dog.owned=true;
+  // 如果是回归狗，保留之前的好感度；否则从0开始
+  if(!room.dog.isReturnDog){room.dog.affection=0;}
+  room.dog.target={};
+  // 回归狗标记自给自足
+  if(room.dog.isReturnDog){room.dog.selfSustaining=true;}
   if(!gameState.stats)gameState.stats={};
   gameState.stats.dogsBought=(gameState.stats.dogsBought||0)+1;
   checkAchievement('bought_one');
@@ -1967,7 +2077,6 @@ function discardOwnedDog(){
   const existingHist=gameState.history.find(h=>h.name===dog.name&&h.purchased);
   if(existingHist)existingHist.discarded=true;
 
-  if(dog.equippedItems)dog.equippedItems.forEach(e=>gameState.inventory.push({id:e}));
   room.occupied=false;room.dog=null;room.log=[];
   closeTrainingPanel();
   renderRooms();renderLobby();renderInventory();autoSave();
@@ -2031,6 +2140,7 @@ function doFeedSpecial(itemId){
     if(producer!==dog.name){checkAchievement('self_produced');}
   }
 
+  dog._lastFedDay=gameState.day;
   if(!dog._actions)dog._actions=[];dog._actions.push({action:'feed_special_'+itemId,time:formatTime(),day:gameState.day});
   advanceTime(10);renderTrainingLog(room);openTrainingPanel(room.id);renderInventory();autoSave();
 }
@@ -2076,6 +2186,20 @@ function checkAutoAchievements(){
   // No food/water true ending
   if(!s.everBoughtFood&&!s.everBoughtWater&&gameState.reputation>=100&&gameState.level>=4)checkAchievement('top_scrooge');
 
+  // No food survive 3 days check
+  gameState.rooms.forEach(r=>{
+    if(r.occupied&&r.dog){
+      const dog=r.dog;
+      const arriveDay=dog._dayArrived||1;
+      const lastFed=dog._lastFedDay||-1;
+      const daysSinceArrival=gameState.day-arriveDay;
+      const daysSinceLastFeed=lastFed===-1?daysSinceArrival:(gameState.day-lastFed);
+      if(daysSinceArrival>=3&&(lastFed===-1||daysSinceLastFeed>=3)&&dog.hunger>0&&dog.thirst>0){
+        checkAchievement('no_food_survive');
+      }
+    }
+  });
+
   // Max affection
   gameState.rooms.forEach(r=>{if(r.occupied&&r.dog?.owned&&(r.dog.affection||0)>=100)checkAchievement('max_affection');});
 
@@ -2108,8 +2232,27 @@ function showItemDetail(id){
   document.getElementById('modalTitle').innerHTML=`${item.icon} ${item.name}${count>1?` ×${count}`:''}`;
   document.getElementById('modalDesc').textContent=item.desc;
   let a='';if(isFac)a+=`<button class="btn btn-primary btn-sm" onclick="openFacilityInstall('${id}')">安装</button>`;
-  a+=`<button class="btn btn-gold btn-sm" onclick="sellItem('${id}')">出售(${sp}💰)</button><button class="btn btn-danger btn-sm" onclick="discardItem('${id}')">丢弃</button><button class="btn btn-secondary btn-sm" onclick="closeModal()">关闭</button>`;
+  a+=`<button class="btn btn-gold btn-sm" onclick="sellItem('${id}')">出售1个(${sp}💰)</button>`;
+  if(count>1)a+=`<button class="btn btn-gold btn-sm" onclick="sellAllItem('${id}')">全部出售(${sp*count}💰)</button>`;
+  a+=`<button class="btn btn-danger btn-sm" onclick="discardItem('${id}')">丢弃</button><button class="btn btn-secondary btn-sm" onclick="closeModal()">关闭</button>`;
   document.getElementById('modalActions').innerHTML=a;document.getElementById('itemModal').classList.add('active');
+}
+
+function sellAllItem(id){
+  const indices=[];
+  for(let i=gameState.inventory.length-1;i>=0;i--){if(gameState.inventory[i].id===id)indices.push(i);}
+  if(!indices.length)return;
+  const it=getShopItemById(id);
+  const sellPrice=it.produced?it.price:Math.floor(it.price/2);
+  const totalGold=sellPrice*indices.length;
+  const totalCount=indices.length;
+  indices.forEach(i=>gameState.inventory.splice(i,1));
+  gameState.gold+=totalGold;
+  if(!gameState.stats)gameState.stats={};
+  if(id==='produced_milk'){gameState.stats.milkSold=(gameState.stats.milkSold||0)+totalCount;checkAchievement('side_hustle');if(gameState.stats.milkSold>=100)checkAchievement('dairy_farm');}
+  if(id==='produced_semen'){gameState.stats.semenSold=(gameState.stats.semenSold||0)+totalCount;checkAchievement('side_hustle');if(gameState.stats.semenSold>=100)checkAchievement('not_a_drop');}
+  renderInventory();renderStatusBar();closeModal();autoSave();
+  showToast(`出售了 ${totalCount} 个 ${it.name}，获得 ${totalGold} 金币！`);
 }
 
 function openFacilityInstall(id){
